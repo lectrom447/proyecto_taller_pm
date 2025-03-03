@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "227380616431",
+    "project_id": "app-taller-pm",
+    "storage_bucket": "app-taller-pm.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227380616431:android:c3f1a4ca3a9473cd8e8f1a",
+        "android_client_info": {
+          "package_name": "com.example.proyectoprogramovil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeMRIH_lbzhOHskwx_6DzwP9M74-c_ezI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
