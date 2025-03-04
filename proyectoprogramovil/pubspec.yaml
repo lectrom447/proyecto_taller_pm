@@ -56,6 +56,15 @@ flutter:
    assets:
     - assets/images/car-repair.svg
     - assets/images/google.svg
+
+   fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins/Poppins-Italic.ttf
+          style: italic
    uses-material-design: true  
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
