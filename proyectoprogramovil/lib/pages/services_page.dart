@@ -22,19 +22,9 @@ class _ServicesPageState extends State<ServicesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Services',
-          // style: TextStyle(fontSize: 25, color: Colors.grey.shade800),
-          // style: TextStyle(fontSize: 25, color: Colors.white),
-        ),
+        title: Text('Services'),
         bottom: TabBar(
           onTap: (_) => setState(() {}),
-          labelColor: Colors.white,
-          indicatorColor: Colors.white,
-          unselectedLabelColor: Colors.white,
-          // labelColor: Colors.blue.shade500,
-          // indicatorColor: Colors.blue.shade500,
-          // unselectedLabelColor: Colors.grey.shade800,
           controller: _tabController,
           tabs: [Tab(text: 'In Process'), Tab(text: 'Completed')],
         ),
@@ -42,12 +32,7 @@ class _ServicesPageState extends State<ServicesPage>
 
       floatingActionButton:
           (_tabController.index == 0)
-              ? FloatingActionButton(
-                onPressed: () {},
-                backgroundColor: Colors.blue.shade400,
-                foregroundColor: Colors.white,
-                child: Icon(Icons.add),
-              )
+              ? FloatingActionButton(onPressed: () {}, child: Icon(Icons.add))
               : null,
     );
   }

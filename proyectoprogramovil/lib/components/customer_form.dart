@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyectoprogramovil/components/components.dart';
 import 'package:proyectoprogramovil/models/models.dart';
 
 class CustomerForm extends StatefulWidget {
@@ -111,19 +112,9 @@ class CustomerFormState extends State<CustomerForm> {
             SizedBox(height: 30),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: (!_isLoading) ? _handleSubmit : null,
-                child:
-                    (!_isLoading)
-                        ? Text('Save')
-                        : SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        ),
+              child: CustomButton(
+                isLoading: _isLoading,
+                onPressed: _handleSubmit,
               ),
             ),
           ],
