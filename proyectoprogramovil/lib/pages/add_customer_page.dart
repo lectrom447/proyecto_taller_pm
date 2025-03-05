@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:proyectoprogramovil/components/components.dart';
+import 'package:proyectoprogramovil/models/models.dart';
+import 'package:proyectoprogramovil/repositories/repositories.dart';
 
 class AddCustomerPage extends StatelessWidget {
-  const AddCustomerPage({super.key});
+  AddCustomerPage({super.key});
+
+  final GlobalKey<CustomerFormState> _customerFormKey =
+      GlobalKey<CustomerFormState>();
+
+  final CustomerRepository _customerRepository = CustomerRepository();
+
+  _handleCreate(BuildContext context, Customer customer) async {
+    _customerFormKey.currentState!.setIsLoading(true);
+    await _customerRepository.create(customer);
+    if (!context.mounted) return;
+    Navigator.pop(context, true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,39 +24,9 @@ class AddCustomerPage extends StatelessWidget {
       appBar: AppBar(title: Text('Add Customer')),
       body: Padding(
         padding: EdgeInsets.all(10),
-        child: Form(
-          child: Column(
-            children: [
-              SizedBox(height: 30),
-              TextFormField(
-                keyboardType: TextInputType.name,
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(label: Text('Full Name')),
-              ),
-              SizedBox(height: 30),
-              TextFormField(
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(label: Text('Phone Number')),
-              ),
-              SizedBox(height: 30),
-              TextFormField(
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(label: Text('Email')),
-              ),
-              SizedBox(height: 30),
-              TextFormField(
-                maxLines: 4,
-                keyboardType: TextInputType.multiline,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(label: Text('Address')),
-              ),
-              SizedBox(height: 30),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(onPressed: () {}, child: Text('Save')),
-              ),
-            ],
-          ),
+        child: CustomerForm(
+          key: _customerFormKey,
+          onSubmit: (customer) => _handleCreate(context, customer),
         ),
       ),
     );

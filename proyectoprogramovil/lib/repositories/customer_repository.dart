@@ -16,13 +16,13 @@ class CustomerRepository {
 
   Future create(Customer newCustomer) async {
     final documentRef = collectionRef.doc();
-    newCustomer.createdAt = DateTime.now();
+    newCustomer.createdAt = Timestamp.now();
     await documentRef.set(newCustomer);
   }
 
   Future update(Customer customer) async {
     final documentRef = collectionRef.doc(customer.id);
-    customer.updatedAt = DateTime.now();
+    customer.updatedAt = Timestamp.now();
     await documentRef.update(customer.toFirestore());
   }
 

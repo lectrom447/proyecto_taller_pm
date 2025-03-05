@@ -7,8 +7,8 @@ class Customer {
   String? email;
   String? address;
   bool isActive;
-  DateTime? createdAt;
-  DateTime? updatedAt;
+  Timestamp? createdAt;
+  Timestamp? updatedAt;
 
   Customer({
     this.id,
@@ -42,10 +42,10 @@ class Customer {
   Map<String, dynamic> toFirestore() {
     return {
       if (fullName != null) "fullName": fullName,
-      if (phoneNumber != null) "state": phoneNumber,
+      if (phoneNumber != null) "phoneNumber": phoneNumber,
       if (email != null) "email": email,
       if (address != null) "address": address,
-      "population": isActive,
+      "isActive": isActive,
       if (createdAt != null) "createdAt": createdAt,
       if (updatedAt != null) "updatedAt": updatedAt,
     };

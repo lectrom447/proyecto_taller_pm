@@ -76,6 +76,7 @@ class MyApp extends StatelessWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             backgroundColor: WidgetStateColor.fromMap({
+              WidgetState.disabled: Colors.grey.shade400,
               WidgetState.any: Colors.blue.shade700,
             }),
           ),

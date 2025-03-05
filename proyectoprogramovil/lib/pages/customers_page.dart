@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:proyectoprogramovil/models/models.dart';
+import 'package:proyectoprogramovil/repositories/repositories.dart';
 
 class CustomersPage extends StatefulWidget {
   const CustomersPage({super.key});
@@ -8,8 +10,29 @@ class CustomersPage extends StatefulWidget {
 }
 
 class _CustomersPageState extends State<CustomersPage> {
-  void _handleCreate() {
-    Navigator.pushNamed(context, 'add_customer');
+  final CustomerRepository _customerRepository = CustomerRepository();
+
+  List<Customer> _customers = [];
+
+  void _handleCreate() async {
+    final isCompleted = await Navigator.pushNamed(context, 'add_customer');
+
+    if (isCompleted != true) return;
+
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final customers = await _customerRepository.findAll();
+    setState(() {
+      _customers = customers;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
   }
 
   @override
@@ -19,6 +42,29 @@ class _CustomersPageState extends State<CustomersPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _handleCreate,
         child: Icon(Icons.add),
+      ),
+      body: ListView.separated(
+        separatorBuilder:
+            (context, index) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Divider(height: 1),
+            ),
+
+        itemCount: _customers.length,
+        itemBuilder: (context, index) {
+          final customer = _customers[index];
+
+          return ListTile(
+            title: Text(customer.fullName!),
+            subtitle: Text(
+              'Phone: ${customer.phoneNumber} \nEmail: ${(customer.email != null && customer.email!.isNotEmpty) ? customer.email : 'Not registered'}',
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.grey.shade600,
+            ),
+          );
+        },
       ),
     );
   }
