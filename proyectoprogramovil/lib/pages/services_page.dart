@@ -25,7 +25,7 @@ class _ServicesPageState extends State<ServicesPage>
         title: Text(
           'Services',
           // style: TextStyle(fontSize: 25, color: Colors.grey.shade800),
-          style: TextStyle(fontSize: 25, color: Colors.white),
+          // style: TextStyle(fontSize: 25, color: Colors.white),
         ),
         bottom: TabBar(
           onTap: (_) => setState(() {}),

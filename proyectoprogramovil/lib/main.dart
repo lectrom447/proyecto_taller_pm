@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:proyectoprogramovil/firebase_options.dart';
+import 'package:proyectoprogramovil/pages/add_customer_page.dart';
 import 'package:proyectoprogramovil/pages/pages.dart';
 
 void main() async {
@@ -20,7 +21,13 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Poppins',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue.shade500),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.blue.shade500,
+          titleTextStyle: TextStyle(
+            fontSize: 25,
+            color: Colors.white,
+            // color: Colors.grey.shade800,
+          ),
+
+          backgroundColor: Colors.blue.shade700,
           foregroundColor: Colors.white,
         ),
         // appBarTheme: AppBarTheme(
@@ -28,7 +35,7 @@ class MyApp extends StatelessWidget {
         //   foregroundColor: Colors.grey.shade900,
         // ),
         navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: Colors.blue.shade500,
+          backgroundColor: Colors.blue.shade700,
           indicatorColor: Colors.blue.shade300,
           iconTheme: WidgetStateProperty.fromMap({
             WidgetState.selected: IconThemeData(color: Colors.white),
@@ -59,8 +66,44 @@ class MyApp extends StatelessWidget {
         //     WidgetState.any: TextStyle(color: Colors.grey.shade600),
         //   }),
         // ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: Colors.blue.shade700,
+          foregroundColor: Colors.white,
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: ButtonStyle(
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            backgroundColor: WidgetStateColor.fromMap({
+              WidgetState.any: Colors.blue.shade700,
+            }),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          floatingLabelStyle: TextStyle(color: Colors.blue.shade700),
+          labelStyle: TextStyle(color: Colors.grey.shade700),
+          // filled: true,
+          // fillColor: Colors.grey.shade200,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade500),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: Colors.blue.shade700,
+              // style: BorderStyle.none,
+            ),
+          ),
+        ),
       ),
-      home: const MainPage(),
+      initialRoute: 'main',
+      routes: {
+        'main': (_) => MainPage(),
+        'add_customer': (_) => AddCustomerPage(),
+      },
     );
   }
 }
