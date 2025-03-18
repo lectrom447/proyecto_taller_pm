@@ -9,13 +9,28 @@ class HomePage extends StatelessWidget {
     await FirebaseAuth.instance.signOut();
   }
 
+  _handleRegister(BuildContext context) async {
+    Navigator.of(context).pushNamed('add_workshop');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Home')),
       body: SizedBox(
         width: double.infinity,
-        child: CustomButton(text: 'Logout', onPressed: _handleLogut),
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            children: [
+              CustomButton(text: 'Logout', onPressed: _handleLogut),
+              CustomButton(
+                text: 'Registrar Taller',
+                onPressed: () => _handleRegister(context),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

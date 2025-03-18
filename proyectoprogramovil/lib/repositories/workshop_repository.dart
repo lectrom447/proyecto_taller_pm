@@ -14,10 +14,13 @@ class WorkshopRepository {
     return result.docs.map((docSnapshot) => docSnapshot.data()).toList();
   }
 
-  Future create(Workshop newWorkshop) async {
+  Future<Workshop> create(Workshop newWorkshop) async {
     final documentRef = collectionRef.doc();
     newWorkshop.createdAt = Timestamp.now();
     await documentRef.set(newWorkshop);
+
+    final docSnapshot = await documentRef.get();
+    return docSnapshot.data()!;
   }
 
   Future update(Workshop workshop) async {

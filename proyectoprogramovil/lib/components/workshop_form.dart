@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:proyectoprogramovil/components/components.dart';
 import 'package:proyectoprogramovil/models/models.dart';
 
-class CustomerForm extends StatefulWidget {
-  final void Function(Customer customer) onSubmit;
-  const CustomerForm({super.key, required this.onSubmit});
+class WorkshopForm extends StatefulWidget {
+  final void Function(Workshop workshop) onSubmit;
+  const WorkshopForm({super.key, required this.onSubmit});
 
   @override
-  State<CustomerForm> createState() => CustomerFormState();
+  State<WorkshopForm> createState() => WorkshopFormState();
 }
 
-class CustomerFormState extends State<CustomerForm> {
+class WorkshopFormState extends State<WorkshopForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
@@ -46,14 +46,14 @@ class CustomerFormState extends State<CustomerForm> {
 
   void _handleSubmit() {
     if (!_formKey.currentState!.validate()) return;
-    final customer = Customer(
-      fullName: _nameInputController.text,
+    final workshop = Workshop(
+      name: _nameInputController.text,
       phoneNumber: _phoneInputController.text,
       email: _emailInputController.text,
       address: _addressInputController.text,
     );
 
-    widget.onSubmit(customer);
+    widget.onSubmit(workshop);
   }
 
   @override
@@ -69,11 +69,11 @@ class CustomerFormState extends State<CustomerForm> {
               controller: _nameInputController,
               keyboardType: TextInputType.name,
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(label: Text('Full Name')),
+              decoration: InputDecoration(label: Text('Name')),
               validator:
                   (value) =>
                       (value == null || value.isEmpty)
-                          ? 'Full Name is required'
+                          ? 'Name is required'
                           : null,
             ),
             SizedBox(height: 30),
