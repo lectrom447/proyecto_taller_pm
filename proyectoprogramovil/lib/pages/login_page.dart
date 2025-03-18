@@ -1,14 +1,17 @@
 // lib/pages/login.page.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:proyectoprogramovil/pages/register_page.dart';
+import 'package:proyectoprogramovil/components/custom_button.dart';
+import 'package:proyectoprogramovil/helpers/validators.dart';
+// import 'package:proyectoprogramovil/pages/register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -16,40 +19,74 @@ class _LoginPageState extends State<LoginPage> {
   final String correctUsername = 'admin';
   final String correctPassword = 'password123';
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   // Controllers to access text field input
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final _emailInputController = TextEditingController();
+  final _passwordInputController = TextEditingController();
 
-  void _login() {
-    String enteredUsername = usernameController.text;
-    String enteredPassword = passwordController.text;
+  bool _isLoading = false;
 
-    // Ensure the context is valid and within a Scaffold
-    if (enteredUsername == correctUsername && enteredPassword == correctPassword) {
-      // If the credentials are correct
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login successful!'), backgroundColor: Colors.green),
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    // String enteredUsername = usernameController.text;
+    // String enteredPassword = passwordController.text;
+
+    // // Ensure the context is valid and within a Scaffold
+    // if (enteredUsername == correctUsername &&
+    //     enteredPassword == correctPassword) {
+    //   // If the credentials are correct
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text('Login successful!'),
+    //       backgroundColor: Colors.green,
+    //     ),
+    //   );
+    // } else {
+    //   // If the credentials are incorrect
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     SnackBar(
+    //       content: Text('Incorrect username or password'),
+    //       backgroundColor: Colors.red,
+    //     ),
+    //   );
+    // }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailInputController.text,
+        password: _passwordInputController.text,
       );
-    } else {
-      // If the credentials are incorrect
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Incorrect username or password'), backgroundColor: Colors.red),
-      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+        _passwordInputController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Incorrect email or password'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Welcome back!',
-          style: TextStyle(fontFamily: 'Roboto', fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-        child: Center(
+      appBar: AppBar(title: Text('Welcome')),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -60,7 +97,10 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Text(
                       'Login',
-                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     SizedBox(width: 10),
                     SvgPicture.asset(
@@ -72,32 +112,50 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               Form(
+                key: _formKey,
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: usernameController,
+                      enabled: !_isLoading,
+                      controller: _emailInputController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: 'Username',
+                        labelText: 'Email',
                         hintText: 'Enter Username',
                         prefixIcon: Icon(Icons.person),
-                        border: OutlineInputBorder(),
                       ),
+                      validator:
+                          (value) =>
+                              (!Validators.isValidEmail(value!))
+                                  ? 'Invalid Email'
+                                  : null,
                     ),
                     SizedBox(height: 30),
                     TextFormField(
-                      controller: passwordController,
+                      enabled: !_isLoading,
+                      controller: _passwordInputController,
                       keyboardType: TextInputType.visiblePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter Password',
                         prefixIcon: Icon(Icons.lock),
-                        border: OutlineInputBorder(),
                       ),
+                      validator:
+                          (value) =>
+                              (value == null || value.isEmpty)
+                                  ? 'Enter your password.'
+                                  : null,
                       obscureText: true, // To hide the password input
                     ),
                     SizedBox(height: 30),
-                    ElevatedButton(onPressed: _login, child: Text('Login')),
+                    SizedBox(
+                      width: double.infinity,
+                      child: CustomButton(
+                        text: 'Login',
+                        onPressed: _login,
+                        isLoading: _isLoading,
+                      ),
+                    ),
 
                     // Add a Divider here
                     SizedBox(height: 20),
@@ -108,7 +166,6 @@ class _LoginPageState extends State<LoginPage> {
 
                     // Space after the divider
                     SizedBox(height: 20),
-
                     ElevatedButton.icon(
                       onPressed: () {},
                       icon: SvgPicture.asset(
@@ -116,25 +173,30 @@ class _LoginPageState extends State<LoginPage> {
                         width: 24, // Adjust size as needed
                         height: 24,
                       ),
-                        label: Text('Sign in with Google'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                        ),
+                      label: Text('Sign in with Google'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                       ),
-                      SizedBox(height: 20),
+                    ),
+                    SizedBox(height: 20),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.of(
                           context,
-                          MaterialPageRoute(builder: (context) => RegisterPage()), // Navigate to the RegisterPage
-                        );
+                        ).pushReplacementNamed('auth/register');
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (context) => RegisterPage(),
+                        //   ), // Navigate to the RegisterPage
+                        // );
                       },
                       child: Text(
                         "Don't have an account? Register",
                         style: TextStyle(color: Colors.blue),
+                      ),
                     ),
-                    )
                   ],
                 ),
               ),
@@ -145,4 +207,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

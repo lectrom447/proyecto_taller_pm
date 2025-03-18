@@ -21,7 +21,8 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightSolidTheme,
       initialRoute: 'main',
       routes: {
-        'main': (_) => MainPage(),
+        'main': (_) => MainAuthGuard(),
+        // 'login': (_) => LoginPage(),
         'add_customer': (_) => AddCustomerPage(),
       },
     );

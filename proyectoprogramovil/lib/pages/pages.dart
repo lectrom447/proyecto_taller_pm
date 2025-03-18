@@ -1,3 +1,5 @@
+export 'package:proyectoprogramovil/pages/auth_page.dart';
+export 'package:proyectoprogramovil/pages/main_auth_guard.dart';
 export 'package:proyectoprogramovil/pages/customers_page.dart';
 export 'package:proyectoprogramovil/pages/home_page.dart';
 export 'package:proyectoprogramovil/pages/profile_page.dart';

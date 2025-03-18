@@ -81,7 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     SizedBox(width: 10),
-                   SvgPicture.asset(
+                    SvgPicture.asset(
                       'assets/images/car-repair.svg',
                       width: 35,
                       height: 45,
@@ -152,15 +152,17 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: Text('Register'),
                     ),
 
-                   
                     SizedBox(height: 20),
                     Divider(color: Colors.black, thickness: 1),
                     SizedBox(height: 20),
 
-                    
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context); // Go back to the login page
+                        Navigator.of(
+                          context,
+                        ).pushReplacementNamed('auth/login');
+
+                        // Navigator.pop(context); // Go back to the login page
                       },
                       child: Text(
                         "Already have an account? Login",
