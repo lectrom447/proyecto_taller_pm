@@ -3,8 +3,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:proyectoprogramovil/components/custom_button.dart';
 import 'package:proyectoprogramovil/helpers/validators.dart';
+import 'package:proyectoprogramovil/services/auth_service.dart';
 // import 'package:proyectoprogramovil/pages/register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -26,6 +28,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordInputController = TextEditingController();
 
   bool _isLoading = false;
+  final AuthService _authService = AuthService();
+
 
   void _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -80,6 +84,36 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    UserCredential? userCredential = await _authService.signInWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (userCredential == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Sign-In failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Sign-In successful'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      // Navigate to another page after successful sign-in
+      Navigator.pushReplacementNamed(context, '/home');
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Space after the divider
                     SizedBox(height: 20),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: _signInWithGoogle,
                       icon: SvgPicture.asset(
                         'assets/images/google.svg', // Update with your SVG file path
                         width: 24, // Adjust size as needed

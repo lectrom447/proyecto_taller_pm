@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -19,27 +20,41 @@ class _RegisterPageState extends State<RegisterPage> {
       TextEditingController();
 
   // Handle registration
-  void _register() {
-    String enteredEmail = emailController.text;
-    String enteredUsername = usernameController.text;
-    String enteredPassword = passwordController.text;
-    String enteredConfirmPassword = confirmPasswordController.text;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-    // Simple validation for the fields
-    if (enteredEmail.isNotEmpty &&
-        enteredUsername.isNotEmpty &&
-        enteredPassword.isNotEmpty &&
-        enteredConfirmPassword.isNotEmpty) {
-      if (enteredPassword == enteredConfirmPassword) {
-        // If passwords match
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Registration successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+  void _register() async {
+    String email = emailController.text.trim();
+    String username = usernameController.text.trim();
+    String password = passwordController.text.trim();
+    String confirmPassword = confirmPasswordController.text.trim();
+
+    if (email.isNotEmpty &&
+        username.isNotEmpty &&
+        password.isNotEmpty &&
+        confirmPassword.isNotEmpty) {
+      if (password == confirmPassword) {
+        try {
+          UserCredential userCredential = await _auth
+              .createUserWithEmailAndPassword(email: email, password: password);
+
+          if (userCredential.user != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Registration successful!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            // Aquí puedes navegar a otra pantalla si deseas
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       } else {
-        // If passwords don't match
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Passwords do not match!'),
@@ -48,7 +63,6 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     } else {
-      // If any field is empty
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Please fill in all fields'),
