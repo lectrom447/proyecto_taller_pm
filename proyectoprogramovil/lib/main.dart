@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
         'main': (_) => MainAuthGuard(),
         // 'login': (_) => LoginPage(),
         'add_customer': (_) => AddCustomerPage(),
+        'add_workshop': (_) => AddWorkshopPage(),
       },
     );
   }
