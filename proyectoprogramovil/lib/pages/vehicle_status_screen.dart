@@ -2,24 +2,35 @@ import 'package:flutter/material.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
 class VehicleServiceStatusScreen extends StatelessWidget {
-  final List<Map<String, String>> vehicles = [
+  final List<Map<String, dynamic>> vehicles = [
     {
       'plate': 'ABC-123',
       'model': 'Toyota Corolla',
       'owner': 'Juan Pérez',
-      'status': 'En progreso'
+      'status': 'En progreso',
+      'services': [
+        {'service': 'Cambio de aceite', 'status': 'En progreso'},
+        {'service': 'Revisión de frenos', 'status': 'Completado'},
+      ],
     },
     {
       'plate': 'XYZ-789',
       'model': 'Honda Civic',
       'owner': 'María Gómez',
-      'status': 'Completado'
+      'status': 'Completado',
+      'services': [
+        {'service': 'Cambio de neumáticos', 'status': 'Completado'},
+        {'service': 'Revisión de motor', 'status': 'Completado'},
+      ],
     },
     {
       'plate': 'LMN-456',
       'model': 'Ford Focus',
       'owner': 'Carlos Rodríguez',
-      'status': 'En espera'
+      'status': 'En espera',
+      'services': [
+        {'service': 'Revisión de suspensión', 'status': 'En espera'},
+      ],
     },
   ];
 
@@ -55,7 +66,7 @@ class VehicleServiceStatusScreen extends StatelessWidget {
 }
 
 class ServiceDetailScreen extends StatelessWidget {
-  final Map<String, String> vehicle;
+  final Map<String, dynamic> vehicle;
 
   ServiceDetailScreen({required this.vehicle});
 
@@ -80,6 +91,29 @@ class ServiceDetailScreen extends StatelessWidget {
               center: Text(vehicle['status']!, style: TextStyle(color: Colors.white)),
               progressColor: vehicle['status'] == 'Completado' ? Colors.green : (vehicle['status'] == 'En progreso' ? Colors.orange : Colors.red),
               backgroundColor: Colors.grey[300],
+            ),
+            SizedBox(height: 30),
+            Text(
+              'Servicios en Progreso:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            // Lista de servicios con su estado
+            Expanded(
+              child: ListView.builder(
+                itemCount: vehicle['services'].length,
+                itemBuilder: (context, index) {
+                  final service = vehicle['services'][index];
+                  return ListTile(
+                    title: Text(service['service']),
+                    subtitle: Text('Estado: ${service['status']}'),
+                    trailing: Icon(
+                      Icons.check_circle,
+                      color: service['status'] == 'Completado' ? Colors.green : Colors.orange,
+                    ),
+                  );
+                },
+              ),
             ),
           ],
         ),

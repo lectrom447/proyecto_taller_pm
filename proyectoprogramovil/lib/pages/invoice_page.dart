@@ -12,8 +12,10 @@ class _InvoicePageState extends State<InvoicePage> {
   TextEditingController vehiculoController = TextEditingController();
   TextEditingController servicioController = TextEditingController();
   TextEditingController costoController = TextEditingController();
+  TextEditingController codigoDescuentoController = TextEditingController(); // Controlador para código de descuento
 
   List<Map<String, dynamic>> servicios = [];
+  double descuento = 0.0; // Variable para almacenar el porcentaje de descuento
 
   void agregarServicio() {
     String servicio = servicioController.text;
@@ -29,7 +31,24 @@ class _InvoicePageState extends State<InvoicePage> {
   }
 
   double calcularTotal() {
-    return servicios.fold(0, (total, item) => total + item['costo']);
+    double total = servicios.fold(0, (total, item) => total + item['costo']);
+    return total - (total * descuento / 100); // Aplicar descuento al total
+  }
+
+  void aplicarDescuento() {
+    String codigo = codigoDescuentoController.text;
+
+    setState(() {
+      if (codigo == 'DESCUENTO10') {
+        descuento = 10.0; // Aplicar 10% de descuento
+      } else if (codigo == 'DESCUENTO15') {
+        descuento = 15.0; // Aplicar 15% de descuento
+      } else if (codigo == 'DESCUENTO20') {
+        descuento = 20.0; // Aplicar 20% de descuento
+      } else {
+        descuento = 0.0; // Si el código no es válido, no hay descuento
+      }
+    });
   }
 
   void generarFactura() {
@@ -69,6 +88,15 @@ class _InvoicePageState extends State<InvoicePage> {
                   onPressed: agregarServicio,
                 ),
               ],
+            ),
+            SizedBox(height: 10),
+            // Campo para ingresar el código de descuento
+            _buildTextField(codigoDescuentoController, 'Código de Descuento', Icons.discount),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: aplicarDescuento,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: Text('Aplicar Descuento'),
             ),
             SizedBox(height: 10),
             Expanded(
