@@ -9,8 +9,12 @@ class ProfileRepository {
         toFirestore: (Profile profile, options) => profile.toFirestore(),
       );
 
-  Future<List<Profile>> findAll() async {
-    final result = await collectionRef.get();
+  Future<List<Profile>> findAll(String userId) async {
+    final result =
+        await collectionRef
+            .where('userId', isEqualTo: userId)
+            .where('isActive', isEqualTo: true)
+            .get();
     return result.docs.map((docSnapshot) => docSnapshot.data()).toList();
   }
 

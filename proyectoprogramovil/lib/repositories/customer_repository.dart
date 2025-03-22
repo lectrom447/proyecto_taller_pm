@@ -9,8 +9,9 @@ class CustomerRepository {
         toFirestore: (Customer customer, options) => customer.toFirestore(),
       );
 
-  Future<List<Customer>> findAll() async {
-    final result = await collectionRef.get();
+  Future<List<Customer>> findAll(String workshopId) async {
+    final result =
+        await collectionRef.where('workshopId', isEqualTo: workshopId).get();
     return result.docs.map((docSnapshot) => docSnapshot.data()).toList();
   }
 
