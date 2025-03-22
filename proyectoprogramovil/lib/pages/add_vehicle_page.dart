@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:proyectoprogramovil/models/models.dart';
+import 'package:proyectoprogramovil/pages/customers_page.dart';
 import 'package:proyectoprogramovil/repositories/vehicle_repository.dart';
 
 class AddVehiclePage extends StatefulWidget {
-  final String customerId; // Pass the customerId when navigating to this page
+  final String? customerId; // Pass the customerId when navigating to this page
 
   AddVehiclePage({required this.customerId});
 
@@ -21,36 +22,59 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   String? _model;
   String? _color;
   int? _year;
+void _saveVehicle() async {
+  if (_formKey.currentState?.validate() ?? false) {
+    _formKey.currentState?.save();
 
-  void _saveVehicle() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
+    Vehicle newVehicle = Vehicle(
+      plateNumber: _plateNumber,
+      brand: _brand,
+      model: _model,
+      color: _color,
+      year: _year,
+      customerId: widget.customerId,
+      isActive: true,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    );
 
-      Vehicle newVehicle = Vehicle(
-        plateNumber: _plateNumber,
-        brand: _brand,
-        model: _model,
-        color: _color,
-        year: _year,
-        customerId: widget.customerId,
-        isActive: true,
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      );
+    try {
+      final createdVehicle = await _vehicleRepository.create(newVehicle);
 
-      try {
-        await _vehicleRepository.create(newVehicle);
+
+      final customerRef = FirebaseFirestore.instance.collection('customers').doc(widget.customerId);
+
+      final customerSnapshot = await customerRef.get();
+
+      if (customerSnapshot.exists) {
+        final customerData = customerSnapshot.data() as Map<String, dynamic>;
+        
+        customerData['vehicleId'] = createdVehicle.id;
+
+        // Now update the customer with the new vehicleId
+        await customerRef.update(customerData);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Vehicle added successfully!')),
-        );
-        Navigator.pop(context);
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding vehicle: $e')),
+          SnackBar(content: Text('Customer updated with vehicle!')),
         );
       }
+
+      // Show success and pop the current screen
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Vehicle added successfully!')),
+      );
+       Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => CustomersPage()), // Make sure to import CustomersPage
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error adding vehicle: $e')),
+      );
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

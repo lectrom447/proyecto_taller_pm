@@ -24,10 +24,12 @@ class CustomerRepository {
     }
   }
 
-  Future create(Customer newCustomer) async {
+  Future<Customer> create(Customer newCustomer) async {
     final documentRef = collectionRef.doc();
     newCustomer.createdAt = Timestamp.now();
     await documentRef.set(newCustomer);
+    newCustomer.id = documentRef.id;
+    return newCustomer;
   }
 
   Future update(Customer customer) async {

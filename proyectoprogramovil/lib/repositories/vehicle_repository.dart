@@ -67,12 +67,14 @@ class VehicleRepository {
   }
 
   // Create a new vehicle
-  Future<void> create(Vehicle newVehicle) async {
+  Future<Vehicle> create(Vehicle newVehicle) async {
     final documentRef = collectionRef.doc();
     newVehicle.createdAt = Timestamp.now();
     newVehicle.updatedAt =
         Timestamp.now(); // Ensure `updatedAt` is set on creation
+    newVehicle.id = documentRef.id;
     await documentRef.set(newVehicle);
+    return newVehicle;
   }
 
   // Update an existing vehicle

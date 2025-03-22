@@ -10,7 +10,8 @@ class InvoiceListPage extends StatefulWidget {
 }
 
 class _InvoiceListPageState extends State<InvoiceListPage> {
-  Map<String, List<Map<String, dynamic>>> facturasPorCliente = {}; // Cliente y sus facturas
+  Map<String, List<Map<String, dynamic>>> facturasPorCliente =
+      {}; // Cliente y sus facturas
   DateTime selectedMonth = DateTime.now(); // Mes seleccionado
   Set<String> autosPorMes = {};
   double totalGeneral = 0.0; // Total general de todas las facturas
@@ -25,25 +26,26 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
   // Obtener las facturas del mes seleccionado
   Future<void> obtenerFacturas() async {
     try {
-      QuerySnapshot invoiceSnapshot = await FirebaseFirestore.instance
-          .collection('invoices')
-          .where(
-            'invoiceDate',
-            isGreaterThanOrEqualTo: DateTime(
-              selectedMonth.year,
-              selectedMonth.month,
-              1,
-            ),
-          )
-          .where(
-            'invoiceDate',
-            isLessThan: DateTime(
-              selectedMonth.year,
-              selectedMonth.month + 1,
-              1,
-            ),
-          )
-          .get();
+      QuerySnapshot invoiceSnapshot =
+          await FirebaseFirestore.instance
+              .collection('invoices')
+              .where(
+                'invoiceDate',
+                isGreaterThanOrEqualTo: DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month,
+                  1,
+                ),
+              )
+              .where(
+                'invoiceDate',
+                isLessThan: DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month + 1,
+                  1,
+                ),
+              )
+              .get();
 
       facturasPorCliente.clear();
       totalGeneral = 0.0;
@@ -56,18 +58,29 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
         cantidadFacturas++;
         autosPorMes.add(vehicleId);
 
-        DocumentSnapshot vehicleDoc = await FirebaseFirestore.instance
-            .collection('vehicles')
-            .doc(vehicleId)
-            .get();
+        DocumentSnapshot vehicleDoc =
+            await FirebaseFirestore.instance
+                .collection('vehicles')
+                .doc(vehicleId)
+                .get();
         String customerId = vehicleDoc['customerId'];
 
-        QuerySnapshot customerDoc = await FirebaseFirestore.instance
-            .collection('customers')
-            .where('id', isEqualTo: customerId)
-            .get();
-        String customerName = customerDoc.docs[0]['fullName'];
-
+        DocumentSnapshot customerDoc =
+            await FirebaseFirestore.instance
+                .collection('customers')
+                .doc(customerId)
+                .get();
+        String customerName = 'Sin nombre';
+        if (customerDoc.exists) {
+          // Si el documento existe, accede a los datos de manera segura
+           customerName =
+              (customerDoc.data() as Map<String, dynamic>)['fullName'];
+        } else {
+          // Si el documento no existe, maneja el caso de manera apropiada
+          print(
+            'El cliente con ID $customerId no se encuentra en la base de datos.',
+          );
+        }
         Map<String, dynamic> factura = {
           'invoiceId': doc.id, // Guardamos el ID de la factura
           'totalAmount': totalAmount,
@@ -91,7 +104,9 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
 
   // Función para mostrar detalles y eliminar factura
   Future<void> mostrarDetallesFactura(
-      String cliente, List<Map<String, dynamic>> facturas) async {
+    String cliente,
+    List<Map<String, dynamic>> facturas,
+  ) async {
     showDialog(
       context: context,
       builder: (context) {
@@ -119,7 +134,10 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
                         await eliminarFactura(factura['invoiceId']);
                         obtenerFacturas(); // Recargar las facturas
                         Navigator.of(context).pop(); // Cerrar el diálogo actual
-                        mostrarDetallesFactura(cliente, facturas); // Recargar detalles
+                        mostrarDetallesFactura(
+                          cliente,
+                          facturas,
+                        ); // Recargar detalles
                       }
                     },
                   ),
@@ -218,10 +236,7 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
         ),
         backgroundColor: Colors.blue,
         actions: [
-          IconButton(
-            icon: Icon(Icons.calendar_today),
-            onPressed: selectMonth,
-          ),
+          IconButton(icon: Icon(Icons.calendar_today), onPressed: selectMonth),
         ],
       ),
       body: Padding(
@@ -235,28 +250,31 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
             facturasPorCliente.isEmpty
                 ? Center(child: Text('Cargando facturas...'))
                 : Expanded(
-                    child: ListView.builder(
-                      itemCount: facturasPorCliente.length,
-                      itemBuilder: (context, index) {
-                        String cliente =
-                            facturasPorCliente.keys.elementAt(index);
-                        double total = facturasPorCliente[cliente]!
-                            .fold(0.0, (sum, factura) => sum + factura['totalAmount']);
+                  child: ListView.builder(
+                    itemCount: facturasPorCliente.length,
+                    itemBuilder: (context, index) {
+                      String cliente = facturasPorCliente.keys.elementAt(index);
+                      double total = facturasPorCliente[cliente]!.fold(
+                        0.0,
+                        (sum, factura) => sum + factura['totalAmount'],
+                      );
 
-                        return Card(
-                          child: ListTile(
-                            title: Text(cliente),
-                            subtitle: Text(
-                              'Total de facturas: \$${total.toStringAsFixed(2)}',
-                            ),
-                            onLongPress: () => mostrarDetallesFactura(
-                              cliente,
-                              facturasPorCliente[cliente]!),
+                      return Card(
+                        child: ListTile(
+                          title: Text(cliente),
+                          subtitle: Text(
+                            'Total de facturas: \$${total.toStringAsFixed(2)}',
                           ),
-                        );
-                      },
-                    ),
+                          onLongPress:
+                              () => mostrarDetallesFactura(
+                                cliente,
+                                facturasPorCliente[cliente]!,
+                              ),
+                        ),
+                      );
+                    },
                   ),
+                ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(

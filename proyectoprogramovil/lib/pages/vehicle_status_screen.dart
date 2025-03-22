@@ -26,27 +26,24 @@ class VehicleServiceStatusScreen extends StatelessWidget {
               final vehicle = vehicles[index].data() as Map<String, dynamic>;
               final customerId = vehicle['customerId'];
 
-              return FutureBuilder<QuerySnapshot>(
+              return FutureBuilder<DocumentSnapshot>(
                 future:
                     FirebaseFirestore.instance
                         .collection('customers')
-                        .where(
-                          'id',
-                          isEqualTo: customerId,
-                        ) // Filtramos por el campo 'customerId'
+                        .doc(customerId)
                         .get(),
                 builder: (context, customerSnapshot) {
                   if (customerSnapshot.connectionState ==
                       ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   }
-
                   String customerName = 'Sin nombre';
                   if (customerSnapshot.hasData &&
-                      customerSnapshot.data!.docs.isNotEmpty) {
-                    // Obtenemos el primer documento que coincida con el customerId
+                      customerSnapshot.data!.exists) {
+                    // Accedemos a los datos del cliente correctamente
                     customerName =
-                        customerSnapshot.data!.docs[0].get('fullName') ??
+                        (customerSnapshot.data!.data()
+                            as Map<String, dynamic>)['fullName'] ??
                         'Sin nombre';
                   }
 
