@@ -165,12 +165,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                           Icons.check_circle,
                           color:
                               service['status'] == 'Pendiente'
-                                  ? Colors
-                                      .red // Rojo si está pendiente
-                                  : Colors.green, // Verde si está completado
+                                  ? Colors.red
+                                  : service['status'] == 'En progreso'
+                                  ? Colors.orange
+                                  : Colors.green,
                         ),
                         onLongPress: () {
-                          _editServiceStatus(context, service);
+                          _editServiceStatus(context, index);
                         },
                       );
                     },
@@ -188,34 +189,46 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
   }
 
-  void _editServiceStatus(BuildContext context, Map<String, dynamic> service) {
+  void _editServiceStatus(BuildContext context, int serviceIndex) {
+    String newStatus =
+        widget.vehicle['services'][serviceIndex]['status'] ?? 'Pendiente';
+
     showDialog(
       context: context,
       builder: (context) {
-        String newStatus = service['status'] ?? 'Pendiente';
         return AlertDialog(
           title: Text('Editar Estado del Servicio'),
-          content: DropdownButton<String>(
-            value: newStatus,
-            items:
-                ['Pendiente', 'En progreso', 'Completado']
-                    .map(
-                      (status) =>
-                          DropdownMenuItem(value: status, child: Text(status)),
-                    )
-                    .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  newStatus = value;
-                });
-              }
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return DropdownButton<String>(
+                value: newStatus,
+                items:
+                    ['Pendiente', 'En progreso', 'Completado']
+                        .map(
+                          (status) => DropdownMenuItem(
+                            value: status,
+                            child: Text(status),
+                          ),
+                        )
+                        .toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      newStatus = value;
+                    });
+                  }
+                },
+              );
             },
           ),
           actions: [
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancelar'),
+            ),
+            TextButton(
               onPressed: () async {
-                // Obtener el documento del vehículo
+                // Obtener el documento actualizado del vehículo
                 DocumentSnapshot vehicleDoc =
                     await FirebaseFirestore.instance
                         .collection('vehicles')
@@ -223,25 +236,29 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         .get();
 
                 if (vehicleDoc.exists) {
-                  // Obtener el campo 'services' del documento
-                  List<dynamic> services = vehicleDoc['services'] ?? [];
+                  // Copia profunda del arreglo de servicios para evitar problemas de referencia
+                  List<dynamic> services = List.from(
+                    vehicleDoc['services'] ?? [],
+                  );
 
-                  // Buscar el servicio en el arreglo 'services' y actualizar su estado
-                  for (var serviceItem in services) {
-                    if (serviceItem['service'] == service['service']) {
-                      serviceItem['status'] = newStatus; // Actualizar el estado
-                      break; // Salir del bucle después de encontrar el servicio
-                    }
-                  }
+                  // Actualizar el estado del servicio correspondiente
+                  services[serviceIndex]['status'] = newStatus;
 
-                  // Actualizar el documento con el servicio modificado
+                  // Actualizar el documento en Firestore
                   await FirebaseFirestore.instance
                       .collection('vehicles')
                       .doc(widget.vehicleId)
                       .update({'services': services});
 
-                  // Cerrar el diálogo
-                  Navigator.pop(context);
+                  // Actualizar el estado local del widget para reflejar los cambios inmediatamente
+                  setState(() {
+                    widget.vehicle['services'][serviceIndex]['status'] =
+                        newStatus;
+                  });
+
+                  Navigator.pop(
+                    context,
+                  ); // Cerrar el diálogo después de guardar
                 }
               },
               child: Text('Guardar'),

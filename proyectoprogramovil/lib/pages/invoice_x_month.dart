@@ -10,9 +10,11 @@ class InvoiceListPage extends StatefulWidget {
 }
 
 class _InvoiceListPageState extends State<InvoiceListPage> {
-  Map<String, double> totalFacturasPorCliente = {}; // Cliente y total de facturas
+  Map<String, List<Map<String, dynamic>>> facturasPorCliente = {}; // Cliente y sus facturas
   DateTime selectedMonth = DateTime.now(); // Mes seleccionado
+  Set<String> autosPorMes = {};
   double totalGeneral = 0.0; // Total general de todas las facturas
+  int cantidadFacturas = 0;
 
   @override
   void initState() {
@@ -23,54 +25,105 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
   // Obtener las facturas del mes seleccionado
   Future<void> obtenerFacturas() async {
     try {
-      // Referencia a la colección de facturas
       QuerySnapshot invoiceSnapshot = await FirebaseFirestore.instance
           .collection('invoices')
-          .where('invoiceDate', isGreaterThanOrEqualTo: DateTime(selectedMonth.year, selectedMonth.month, 1))
-          .where('invoiceDate', isLessThan: DateTime(selectedMonth.year, selectedMonth.month + 1, 1))
+          .where(
+            'invoiceDate',
+            isGreaterThanOrEqualTo: DateTime(
+              selectedMonth.year,
+              selectedMonth.month,
+              1,
+            ),
+          )
+          .where(
+            'invoiceDate',
+            isLessThan: DateTime(
+              selectedMonth.year,
+              selectedMonth.month + 1,
+              1,
+            ),
+          )
           .get();
 
-      totalFacturasPorCliente.clear(); // Limpiar el mapa antes de agregar nuevas facturas
-      totalGeneral = 0.0; // Reiniciar el total general
+      facturasPorCliente.clear();
+      totalGeneral = 0.0;
+      autosPorMes.clear();
+      cantidadFacturas = 0;
 
-      // Procesar cada factura
       for (var doc in invoiceSnapshot.docs) {
         double totalAmount = doc['totalAmount'] ?? 0.0;
         String vehicleId = doc['vehicleId'];
+        cantidadFacturas++;
+        autosPorMes.add(vehicleId);
 
-        // Buscar el customerId en la colección vehicles
         DocumentSnapshot vehicleDoc = await FirebaseFirestore.instance
             .collection('vehicles')
             .doc(vehicleId)
             .get();
         String customerId = vehicleDoc['customerId'];
 
-        // Buscar el fullName del cliente en la colección customers
         QuerySnapshot customerDoc = await FirebaseFirestore.instance
             .collection('customers')
             .where('id', isEqualTo: customerId)
             .get();
         String customerName = customerDoc.docs[0]['fullName'];
 
-        // Sumar el total de la factura al cliente correspondiente
-        if (totalFacturasPorCliente.containsKey(customerName)) {
-          totalFacturasPorCliente[customerName] = totalFacturasPorCliente[customerName]! + totalAmount;
+        Map<String, dynamic> factura = {
+          'totalAmount': totalAmount,
+          'invoiceDate': (doc['invoiceDate'] as Timestamp).toDate(),
+        };
+
+        if (facturasPorCliente.containsKey(customerName)) {
+          facturasPorCliente[customerName]!.add(factura);
         } else {
-          totalFacturasPorCliente[customerName] = totalAmount;
+          facturasPorCliente[customerName] = [factura];
         }
 
-        // Sumar al total general
         totalGeneral += totalAmount;
       }
 
-      // Actualizar la interfaz de usuario
       setState(() {});
     } catch (e) {
       print('Error al obtener facturas: $e');
     }
   }
 
-  // Seleccionar un mes
+  Future<void> mostrarDetallesFactura(
+      String cliente, List<Map<String, dynamic>> facturas) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Detalles de facturas de $cliente'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: facturas.length,
+              itemBuilder: (context, index) {
+                var factura = facturas[index];
+                return ListTile(
+                  title: Text(
+                    'Monto: \$${factura['totalAmount'].toStringAsFixed(2)}',
+                  ),
+                  subtitle: Text(
+                    'Fecha: ${factura['invoiceDate'].day}/${factura['invoiceDate'].month}/${factura['invoiceDate'].year}',
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> selectMonth() async {
     DateTime? pickedMonth = await showMonthPicker(
       context: context,
@@ -90,12 +143,33 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Total de Facturas por Mes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Facturas por Mes',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Row(
+              children: [
+                Icon(Icons.directions_car, size: 20, color: Colors.white),
+                Text(
+                  ' x ${autosPorMes.length}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
             icon: Icon(Icons.calendar_today),
-            onPressed: selectMonth, // Mostrar el selector de mes
+            onPressed: selectMonth,
           ),
         ],
       ),
@@ -107,22 +181,26 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
               'Mes seleccionado: ${selectedMonth.month}/${selectedMonth.year}',
               style: TextStyle(fontSize: 16),
             ),
-            totalFacturasPorCliente.isEmpty
+            facturasPorCliente.isEmpty
                 ? Center(child: Text('Cargando facturas...'))
                 : Expanded(
                     child: ListView.builder(
-                      itemCount: totalFacturasPorCliente.length,
+                      itemCount: facturasPorCliente.length,
                       itemBuilder: (context, index) {
-                        String cliente = totalFacturasPorCliente.keys.elementAt(
-                          index,
-                        );
-                        double total = totalFacturasPorCliente[cliente]!;
+                        String cliente =
+                            facturasPorCliente.keys.elementAt(index);
+                        double total = facturasPorCliente[cliente]!
+                            .fold(0.0, (sum, factura) => sum + factura['totalAmount']);
 
                         return Card(
                           child: ListTile(
                             title: Text(cliente),
                             subtitle: Text(
                               'Total de facturas: \$${total.toStringAsFixed(2)}',
+                            ),
+                            onLongPress: () => mostrarDetallesFactura(
+                              cliente,
+                              facturasPorCliente[cliente]!,
                             ),
                           ),
                         );
