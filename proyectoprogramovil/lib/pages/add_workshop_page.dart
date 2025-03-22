@@ -24,7 +24,7 @@ class AddWorkshopPage extends StatelessWidget {
 
     await _profileRepository.create(newProfile);
     if (!context.mounted) return;
-    Navigator.pop(context, true);
+    Navigator.of(context).pop();
   }
 
   @override

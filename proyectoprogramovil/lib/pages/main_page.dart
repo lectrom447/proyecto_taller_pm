@@ -31,7 +31,6 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future _checkProfile() async {
-    print(FirebaseAuth.instance.currentUser);
     final profiles = await _profileRepository.findAll(
       FirebaseAuth.instance.currentUser!.uid,
     );
@@ -56,7 +55,7 @@ class _MainPageState extends State<MainPage> {
           builder: (context, appState, child) {
             return (appState.currentProfile == null)
                 // ? Scaffold(body: Text('No Hay Pefil'))
-                ? HomePage()
+                ? NoProfileFoundPage()
                 : Scaffold(
                   body:
                       [
