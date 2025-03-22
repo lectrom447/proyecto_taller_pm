@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:proyectoprogramovil/models/models.dart';
 
 class Customer {
   String? id;
@@ -8,6 +9,7 @@ class Customer {
   String? address;
   String? workshopId;
   bool isActive;
+  String? vehicleId;
   Timestamp? createdAt;
   Timestamp? updatedAt;
 
@@ -19,6 +21,7 @@ class Customer {
     this.address,
     this.workshopId,
     this.isActive = true,
+    this.vehicleId,
     this.createdAt,
     this.updatedAt,
   });
@@ -37,6 +40,7 @@ class Customer {
       email: data['email'],
       address: data['address'],
       isActive: data['isActive'],
+      vehicleId: data['vehicleId'],
       createdAt: data['createdAt'],
       updatedAt: data['updatedAt'],
     );
@@ -50,6 +54,7 @@ class Customer {
       if (email != null) "email": email,
       if (address != null) "address": address,
       "isActive": isActive,
+      if (vehicleId != null) "vehicleId": vehicleId, 
       if (createdAt != null) "createdAt": createdAt,
       if (updatedAt != null) "updatedAt": updatedAt,
     };
