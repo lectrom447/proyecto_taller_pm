@@ -1,11 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/components/custom_button.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  _handleLogut() async {
+  _handleLogut(BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    appState.cleanCurrentProfile();
     await FirebaseAuth.instance.signOut();
   }
 
@@ -23,7 +27,10 @@ class HomePage extends StatelessWidget {
           padding: EdgeInsets.all(20),
           child: Column(
             children: [
-              CustomButton(text: 'Logout', onPressed: _handleLogut),
+              CustomButton(
+                text: 'Logout',
+                onPressed: () => _handleLogut(context),
+              ),
               CustomButton(
                 text: 'Registrar Taller',
                 onPressed: () => _handleRegister(context),

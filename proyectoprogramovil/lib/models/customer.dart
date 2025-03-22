@@ -6,6 +6,7 @@ class Customer {
   String? phoneNumber;
   String? email;
   String? address;
+  String? workshopId;
   bool isActive;
   Timestamp? createdAt;
   Timestamp? updatedAt;
@@ -16,6 +17,7 @@ class Customer {
     this.phoneNumber,
     this.email,
     this.address,
+    this.workshopId,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
@@ -31,6 +33,7 @@ class Customer {
       id: snapshot.id,
       fullName: data!['fullName'],
       phoneNumber: data['phoneNumber'],
+      workshopId: data['workshopId'],
       email: data['email'],
       address: data['address'],
       isActive: data['isActive'],
@@ -43,6 +46,7 @@ class Customer {
     return {
       if (fullName != null) "fullName": fullName,
       if (phoneNumber != null) "phoneNumber": phoneNumber,
+      if (workshopId != null) "workshopId": workshopId,
       if (email != null) "email": email,
       if (address != null) "address": address,
       "isActive": isActive,

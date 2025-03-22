@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/components/components.dart';
 import 'package:proyectoprogramovil/models/models.dart';
 import 'package:proyectoprogramovil/repositories/repositories.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class CustomersPage extends StatefulWidget {
   const CustomersPage({super.key});
@@ -12,6 +14,7 @@ class CustomersPage extends StatefulWidget {
 
 class _CustomersPageState extends State<CustomersPage> {
   final CustomerRepository _customerRepository = CustomerRepository();
+  late final AppState _appState;
   bool _isLoading = true;
 
   List<Customer> _customers = [];
@@ -25,7 +28,9 @@ class _CustomersPageState extends State<CustomersPage> {
   }
 
   Future<void> _loadData() async {
-    final customers = await _customerRepository.findAll();
+    final customers = await _customerRepository.findAll(
+      _appState.currentProfile!.workshopId!,
+    );
     setState(() {
       _isLoading = false;
       _customers = customers;
@@ -35,6 +40,7 @@ class _CustomersPageState extends State<CustomersPage> {
   @override
   void initState() {
     super.initState();
+    _appState = Provider.of<AppState>(context, listen: false);
     _loadData();
   }
 
