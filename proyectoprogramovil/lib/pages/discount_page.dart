@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:proyectoprogramovil/models/models.dart' show Discount;
 
 class DiscountPage extends StatefulWidget {
   const DiscountPage({super.key});
@@ -10,18 +12,36 @@ class DiscountPage extends StatefulWidget {
 class _DiscountPageState extends State<DiscountPage> {
   TextEditingController codigoController = TextEditingController();
   TextEditingController porcentajeController = TextEditingController();
-  List<Map<String, dynamic>> descuentos = []; // Lista para almacenar los códigos de descuento
+  List<Discount> descuentos = []; // Lista para almacenar los objetos de descuento
 
-  void guardarDescuento() {
+  void guardarDescuento() async {
     String codigo = codigoController.text.trim();
     double? porcentaje = double.tryParse(porcentajeController.text);
 
     if (codigo.isNotEmpty && porcentaje != null && porcentaje > 0) {
-      setState(() {
-        descuentos.add({'codigo': codigo, 'descuento': porcentaje}); // Agregar el nuevo descuento a la lista
-      });
-      codigoController.clear();
-      porcentajeController.clear();
+      Discount newDiscount = Discount(codeName: codigo, amount: porcentaje);
+
+      // Add the discount to Firestore
+      try {
+        // Save the discount in the "discounts" collection
+        await FirebaseFirestore.instance.collection('discounts').add(newDiscount.toMap());
+
+        setState(() {
+          descuentos.add(newDiscount); // Agregar el nuevo descuento a la lista local
+        });
+
+        // Clear the input fields
+        codigoController.clear();
+        porcentajeController.clear();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Código de descuento guardado con éxito.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al guardar el descuento: $e')),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Por favor ingresa un código válido y un porcentaje de descuento.')),
@@ -65,14 +85,30 @@ class _DiscountPageState extends State<DiscountPage> {
                 itemCount: descuentos.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text('Código: ${descuentos[index]['codigo']}'),
-                    subtitle: Text('Descuento: ${descuentos[index]['descuento']}%'),
+                    title: Text('Código: ${descuentos[index].codeName}'),
+                    subtitle: Text('Descuento: ${descuentos[index].amount}%'),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          descuentos.removeAt(index); // Eliminar el descuento
-                        });
+                      onPressed: () async {
+                        // Remove discount from local list and Firestore
+                        try {
+                          // Assuming you want to remove the discount from Firestore
+                          var snapshot = await FirebaseFirestore.instance
+                              .collection('discounts')
+                              .where('codeName', isEqualTo: descuentos[index].codeName)
+                              .get();
+                          for (var doc in snapshot.docs) {
+                            await doc.reference.delete(); // Delete the document from Firestore
+                          }
+
+                          setState(() {
+                            descuentos.removeAt(index); // Remove the discount from the list
+                          });
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error al eliminar el descuento: $e')),
+                          );
+                        }
                       },
                     ),
                   );
