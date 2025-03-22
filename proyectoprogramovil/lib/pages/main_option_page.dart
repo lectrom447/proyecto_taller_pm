@@ -1,5 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: MainOptionPage(),
+    );
+  }
+}
 
 class MainOptionPage extends StatelessWidget {
   @override
@@ -13,7 +26,8 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Taller de Mecánico', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('Bienvenido al sistema de gestión del Taller de Mecánica, Juan.',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         backgroundColor: Colors.blue,
       ),
       body: Container(
@@ -27,33 +41,58 @@ class MainScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 children: [
-                  _buildOptionCard('Registro de Clientes', Icons.person_add),
-                  _buildOptionCard('Vehículos Ingresados', Icons.directions_car),
-                  _buildOptionCard('Vehículos en Proceso', Icons.build),
-                  _buildOptionCard('Vehículos Terminados', Icons.check_circle),
+                  _buildOptionCard(context, 'Registro de Clientes', Icons.person_add),
+                  _buildOptionCard(context, 'Vehículos Ingresados', Icons.directions_car),
+                  _buildOptionCard(context, 'Vehículos Terminados', Icons.check_circle),
+                  _buildOptionCard(context, 'Gestión de Usuarios', Icons.supervised_user_circle),
+                  _buildOptionCard(context, 'Reporte de Facturación', Icons.account_balance_wallet),
+                  _buildOptionCard(context, 'Servicios Realizados', Icons.assignment_turned_in),
                 ],
               ),
             ),
+            SizedBox(height: 16), // Espacio entre el GridView y el FloatingActionButton
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showFloatingDialog(context);
+          _showFormDialog(context, 'Nueva Cita', ['Nombre del Cliente', 'Datos del Vehículo', 'Motivo de Ingreso']);
         },
         child: Icon(Icons.add, size: 28),
-        backgroundColor: Colors.lightBlue, // Azul más suave
+        backgroundColor: Colors.lightBlue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Ajusta la ubicación del botón flotante
     );
   }
 
-  Widget _buildOptionCard(String title, IconData icon) {
+  Widget _buildOptionCard(BuildContext context, String title, IconData icon) {
     return Card(
       elevation: 10,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          switch (title) {
+            case 'Registro de Clientes':
+              _showFormDialog(context, title, ['Nombre', 'Teléfono', 'Correo Electrónico']);
+              break;
+            case 'Vehículos Ingresados':
+              _showFormDialog(context, title, ['Placa', 'Modelo', 'Año', 'Propietario']);
+              break;
+            case 'Vehículos Terminados':
+              _showFormDialog(context, title, ['Placa', 'Fecha de Finalización', 'Observaciones']);
+              break;
+            case 'Gestión de Usuarios':
+              _showFormDialog(context, title, ['Nombre', 'Rol', 'Estado']);
+              break;
+            case 'Reporte de Facturación':
+              _showFormDialog(context, title, ['Fecha de Facturación', 'Monto Total', 'Cliente']);
+              break;
+            case 'Servicios Realizados':
+              _showFormDialog(context, title, ['Placa', 'Fecha de Servicio', 'Descripción']);
+              break;
+          }
+        },
         child: Container(
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -70,7 +109,7 @@ class MainScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 60, color: Colors.black), // Icono negro
+              Icon(icon, size: 60, color: Colors.black),
               SizedBox(height: 8),
               Text(
                 title,
@@ -78,7 +117,7 @@ class MainScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.lightBlue, // Texto azul suave
+                  color: Colors.lightBlue,
                 ),
               ),
             ],
@@ -88,50 +127,52 @@ class MainScreen extends StatelessWidget {
     );
   }
 
-  void _showFloatingDialog(BuildContext context) {
+  void _showFormDialog(BuildContext context, String title, List<String> fields) {
+    List<TextEditingController> controllers = fields.map((_) => TextEditingController()).toList();
+    
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.event_note, size: 50, color: Colors.blueAccent),
-                SizedBox(height: 10),
-                Text(
-                  'Nueva Cita',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'Agrega una nueva cita para el taller.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Cancelar', style: TextStyle(color: Colors.red)),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _showFormDialog(context);
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
-                      child: Text('Ingresar Detalles'),
-                    ),
-                  ],
-                ),
-              ],
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_note, size: 50, color: Colors.blueAccent),
+                  SizedBox(height: 10),
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  ...List.generate(fields.length, (index) => _buildTextField(controllers[index], fields[index])),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text('Cancelar', style: TextStyle(color: Colors.red)),
+                      ),  
+                      ElevatedButton(
+                        onPressed: () {
+                          for (int i = 0; i < fields.length; i++) {
+                            print('${fields[i]}: ${controllers[i].text}');
+                          }
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
+                        child: Text('Guardar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -139,71 +180,15 @@ class MainScreen extends StatelessWidget {
     );
   }
 
-  void _showFormDialog(BuildContext context) {
-    TextEditingController clienteController = TextEditingController();
-    TextEditingController vehiculoController = TextEditingController();
-    TextEditingController motivoController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.edit_note, size: 50, color: Colors.blueAccent),
-                SizedBox(height: 10),
-                Text(
-                  'Detalles de la Cita',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                _buildTextField(clienteController, 'Nombre del Cliente', Icons.person),
-                SizedBox(height: 12),
-                _buildTextField(vehiculoController, 'Datos del Vehículo', Icons.directions_car),
-                SizedBox(height: 12),
-                _buildTextField(motivoController, 'Motivo de Ingreso', Icons.info),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Cancelar', style: TextStyle(color: Colors.red)),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Aquí puedes guardar los datos ingresados
-                        print('Cliente: ${clienteController.text}');
-                        print('Vehículo: ${vehiculoController.text}');
-                        print('Motivo: ${motivoController.text}');
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
-                      child: Text('Guardar'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String hintText, IconData icon) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: hintText,
-        prefixIcon: Icon(icon, color: Colors.blue),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _buildTextField(TextEditingController controller, String hintText) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: hintText,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }
