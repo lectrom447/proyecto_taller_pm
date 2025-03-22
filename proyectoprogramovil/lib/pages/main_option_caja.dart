@@ -26,31 +26,23 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bienvenido al sistema de gestión del Taller de Mecánica, Juan.',
-            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(
+          'Bienvenido al sistema de gestión del Taller de Mecánica, Juan.',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
         backgroundColor: Colors.blue,
       ),
-      body: Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16.0),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           children: [
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: [
-                  _buildOptionCard(context, 'Registro de Clientes', Icons.person_add),
-                  _buildOptionCard(context, 'Vehículos Ingresados', Icons.directions_car),
-                  _buildOptionCard(context, 'Vehículos Terminados', Icons.check_circle),
-                  _buildOptionCard(context, 'Gestión de Usuarios', Icons.supervised_user_circle),
-                  _buildOptionCard(context, 'Reporte de Facturación', Icons.account_balance_wallet),
-                  _buildOptionCard(context, 'Servicios Realizados', Icons.assignment_turned_in),
-                ],
+              child: Center( // Centrar la opción en la pantalla
+                child: _buildOptionCard(context, 'Reporte de Facturación', Icons.account_balance_wallet),
               ),
             ),
-            SizedBox(height: 16), // Espacio entre el GridView y el FloatingActionButton
+            SizedBox(height: 20), // Espacio entre la opción y el botón flotante
           ],
         ),
       ),
@@ -62,63 +54,30 @@ class MainScreen extends StatelessWidget {
         backgroundColor: Colors.lightBlue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Ajusta la ubicación del botón flotante
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
   Widget _buildOptionCard(BuildContext context, String title, IconData icon) {
     return Card(
-      elevation: 10,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: InkWell(
         onTap: () {
-          switch (title) {
-            case 'Registro de Clientes':
-              _showFormDialog(context, title, ['Nombre', 'Teléfono', 'Correo Electrónico']);
-              break;
-            case 'Vehículos Ingresados':
-              _showFormDialog(context, title, ['Placa', 'Modelo', 'Año', 'Propietario']);
-              break;
-            case 'Vehículos Terminados':
-              _showFormDialog(context, title, ['Placa', 'Fecha de Finalización', 'Observaciones']);
-              break;
-            case 'Gestión de Usuarios':
-              _showFormDialog(context, title, ['Nombre', 'Rol', 'Estado']);
-              break;
-            case 'Reporte de Facturación':
-              _showFormDialog(context, title, ['Fecha de Facturación', 'Monto Total', 'Cliente']);
-              break;
-            case 'Servicios Realizados':
-              _showFormDialog(context, title, ['Placa', 'Fecha de Servicio', 'Descripción']);
-              break;
-          }
+          _showFormDialog(context, title, ['Ingrese la información aquí']);
         },
-        child: Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20), // Ajuste de espacio interno
           child: Column(
+            mainAxisSize: MainAxisSize.min, // Evitar que ocupe más espacio del necesario
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 60, color: Colors.black),
-              SizedBox(height: 8),
+              Icon(icon, size: 50, color: Colors.blueGrey), // Tamaño ajustado
+              SizedBox(height: 10),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.lightBlue,
-                ),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
               ),
             ],
           ),
