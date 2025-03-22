@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyectoprogramovil/models/models.dart';
 
@@ -27,11 +26,14 @@ class VehicleServiceStatusScreen extends StatelessWidget {
               final vehicle = vehicles[index].data() as Map<String, dynamic>;
               final customerId = vehicle['customerId'];
 
-              return FutureBuilder<DocumentSnapshot>(
+              return FutureBuilder<QuerySnapshot>(
                 future:
                     FirebaseFirestore.instance
                         .collection('customers')
-                        .doc(customerId)
+                        .where(
+                          'id',
+                          isEqualTo: customerId,
+                        ) // Filtramos por el campo 'customerId'
                         .get(),
                 builder: (context, customerSnapshot) {
                   if (customerSnapshot.connectionState ==
@@ -41,9 +43,11 @@ class VehicleServiceStatusScreen extends StatelessWidget {
 
                   String customerName = 'Sin nombre';
                   if (customerSnapshot.hasData &&
-                      customerSnapshot.data!.exists) {
+                      customerSnapshot.data!.docs.isNotEmpty) {
+                    // Obtenemos el primer documento que coincida con el customerId
                     customerName =
-                        customerSnapshot.data!.get('fullName') ?? 'Sin nombre';
+                        customerSnapshot.data!.docs[0].get('fullName') ??
+                        'Sin nombre';
                   }
 
                   return Card(
@@ -62,8 +66,7 @@ class VehicleServiceStatusScreen extends StatelessWidget {
                       ),
                       subtitle: Text(
                         'Placa: ${vehicle['plateNumber'] ?? 'Sin placa'}\n'
-                        'Dueño: $customerName\n'
-                        'Estado: ${vehicle['status'] ?? 'Sin estado'}',
+                        'Dueño: $customerName\n',
                       ),
                       trailing: Icon(Icons.arrow_forward_ios),
                       onTap:
@@ -142,32 +145,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  'Estado del Servicio: ${vehicleData['status'] ?? 'Sin estado'}',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20),
-                LinearPercentIndicator(
-                  lineHeight: 20.0,
-                  percent:
-                      vehicleData['status'] == 'Completado'
-                          ? 1.0
-                          : (vehicleData['status'] == 'En progreso'
-                              ? 0.5
-                              : 0.2),
-                  center: Text(
-                    vehicleData['status'] ?? 'Sin estado',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  progressColor:
-                      vehicleData['status'] == 'Completado'
-                          ? Colors.green
-                          : (vehicleData['status'] == 'En progreso'
-                              ? Colors.orange
-                              : Colors.red),
-                  backgroundColor: Colors.grey[300],
-                ),
-                SizedBox(height: 30),
-                Text(
                   'Servicios en Progreso:',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -179,7 +156,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                       final service = vehicleData['services'][index];
                       return ListTile(
                         title: Text(
-                          service['service'] ?? 'Servicio desconocido',
+                          service['description'] ?? 'Servicio desconocido',
                         ),
                         subtitle: Text(
                           'Estado: ${service['status'] ?? 'Sin estado'}',
@@ -187,10 +164,14 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         trailing: Icon(
                           Icons.check_circle,
                           color:
-                              service['status'] == 'Completado'
-                                  ? Colors.green
-                                  : Colors.orange,
+                              service['status'] == 'Pendiente'
+                                  ? Colors
+                                      .red // Rojo si está pendiente
+                                  : Colors.green, // Verde si está completado
                         ),
+                        onLongPress: () {
+                          _editServiceStatus(context, service);
+                        },
                       );
                     },
                   ),
@@ -207,21 +188,89 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     );
   }
 
+  void _editServiceStatus(BuildContext context, Map<String, dynamic> service) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String newStatus = service['status'] ?? 'Pendiente';
+        return AlertDialog(
+          title: Text('Editar Estado del Servicio'),
+          content: DropdownButton<String>(
+            value: newStatus,
+            items:
+                ['Pendiente', 'En progreso', 'Completado']
+                    .map(
+                      (status) =>
+                          DropdownMenuItem(value: status, child: Text(status)),
+                    )
+                    .toList(),
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  newStatus = value;
+                });
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                // Obtener el documento del vehículo
+                DocumentSnapshot vehicleDoc =
+                    await FirebaseFirestore.instance
+                        .collection('vehicles')
+                        .doc(widget.vehicleId)
+                        .get();
+
+                if (vehicleDoc.exists) {
+                  // Obtener el campo 'services' del documento
+                  List<dynamic> services = vehicleDoc['services'] ?? [];
+
+                  // Buscar el servicio en el arreglo 'services' y actualizar su estado
+                  for (var serviceItem in services) {
+                    if (serviceItem['service'] == service['service']) {
+                      serviceItem['status'] = newStatus; // Actualizar el estado
+                      break; // Salir del bucle después de encontrar el servicio
+                    }
+                  }
+
+                  // Actualizar el documento con el servicio modificado
+                  await FirebaseFirestore.instance
+                      .collection('vehicles')
+                      .doc(widget.vehicleId)
+                      .update({'services': services});
+
+                  // Cerrar el diálogo
+                  Navigator.pop(context);
+                }
+              },
+              child: Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _addService(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
-        String serviceName = ''; // Variable para el nombre del servicio
-        String serviceStatus = 'Pendiente'; // Estado por defecto
+        String serviceName = ''; // Nombre del servicio
+        String serviceStatus = 'Pendiente'; // Estado del servicio
+        String selectedProduct = ''; // Producto seleccionado
+        int quantity = 1; // Cantidad de productos
+        double productPrice = 0.0; // Precio del producto seleccionado
+        double total = 0.0; // Total del servicio
 
         return AlertDialog(
           title: Text('Agregar Servicio'),
           content: StatefulBuilder(
             builder: (context, setState) {
-              // Usamos StatefulBuilder para actualizar el estado
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Nombre del servicio
                   TextField(
                     decoration: InputDecoration(
                       labelText: 'Nombre del Servicio',
@@ -229,6 +278,80 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     onChanged: (value) => serviceName = value,
                   ),
                   SizedBox(height: 10),
+
+                  // Selección de producto como TextField
+                  FutureBuilder<QuerySnapshot>(
+                    future:
+                        FirebaseFirestore.instance.collection('products').get(),
+                    builder: (context, productSnapshot) {
+                      if (productSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      }
+
+                      if (!productSnapshot.hasData ||
+                          productSnapshot.data!.docs.isEmpty) {
+                        return Text('No hay productos disponibles.');
+                      }
+
+                      final products = productSnapshot.data!.docs;
+                      return InputDecorator(
+                        decoration: InputDecoration(
+                          labelText: 'Selecciona un Producto',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 12,
+                          ),
+                        ),
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value:
+                              selectedProduct.isEmpty ? null : selectedProduct,
+                          items:
+                              products.map((productDoc) {
+                                final productData =
+                                    productDoc.data() as Map<String, dynamic>;
+                                final productName =
+                                    productData['name'] ??
+                                    'Producto desconocido';
+                                return DropdownMenuItem<String>(
+                                  value: productName,
+                                  child: Text(productName),
+                                );
+                              }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedProduct = value!;
+                              // Obtener el precio del producto seleccionado
+                              final selectedProductData = products.firstWhere(
+                                (productDoc) =>
+                                    productDoc['name'] == selectedProduct,
+                              );
+                              productPrice =
+                                  selectedProductData['price'] ?? 0.0;
+                              total =
+                                  productPrice * quantity; // Calcular el total
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                  SizedBox(height: 10),
+
+                  // Cantidad
+                  TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(labelText: 'Cantidad'),
+                    onChanged: (value) {
+                      quantity = int.tryParse(value) ?? 1;
+                      total = productPrice * quantity; // Recalcular el total
+                    },
+                  ),
+                  SizedBox(height: 10),
+
+                  // Estado
                   DropdownButton<String>(
                     value: serviceStatus,
                     items:
@@ -243,17 +366,17 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                     onChanged: (value) {
                       if (value != null) {
                         setState(() {
-                          serviceStatus =
-                              value; // Actualiza el estado del DropdownButton
+                          serviceStatus = value;
                         });
                       }
                     },
                   ),
                   SizedBox(height: 10),
+
+                  // Botón de agregar
                   ElevatedButton(
                     onPressed: () async {
                       if (serviceName.isEmpty) {
-                        // Asegurarse de que el nombre no esté vacío
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -264,16 +387,17 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         return;
                       }
 
-                      // Crear el servicio con el nombre proporcionado y el estado seleccionado
                       final service = Service(
                         description: serviceName,
-                        cost: 0.0, // Costo por defecto 0
-                        serviceDate: Timestamp.now(), // Fecha actual
+                        serviceDate: Timestamp.now(),
                         status: serviceStatus,
                         vehicleId: widget.vehicleId,
+                        products: [
+                          Product(name: selectedProduct, quantity: quantity),
+                        ],
+                        total: total, // Agregar el total al servicio
                       );
 
-                      // Agregar el servicio al vehículo en Firestore
                       await FirebaseFirestore.instance
                           .collection('vehicles')
                           .doc(widget.vehicleId)
@@ -283,7 +407,6 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                             ]),
                           });
 
-                      // Cerrar el diálogo
                       Navigator.pop(context);
                     },
                     child: Text('Agregar'),

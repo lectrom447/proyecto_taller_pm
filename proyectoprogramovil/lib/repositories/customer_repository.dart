@@ -15,6 +15,15 @@ class CustomerRepository {
     return result.docs.map((docSnapshot) => docSnapshot.data()).toList();
   }
 
+  Future<Customer?> findById(String id) async {
+    final docSnapshot = await collectionRef.doc(id).get();
+    if (docSnapshot.exists) {
+      return docSnapshot.data();
+    } else {
+      return null; // Si no existe el cliente, retornamos null
+    }
+  }
+
   Future create(Customer newCustomer) async {
     final documentRef = collectionRef.doc();
     newCustomer.createdAt = Timestamp.now();

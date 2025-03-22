@@ -19,6 +19,53 @@ class VehicleRepository {
     return result.docs.map((docSnapshot) => docSnapshot.data()).toList();
   }
 
+  Future<Vehicle?> getById(String vehicleId) async {
+    try {
+      // Obtener los documentos que coinciden con el vehicleId
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('vehicles') // Colección de vehículos
+              .where('id', isEqualTo: vehicleId) // Filtrar por 'id'
+              .get();
+
+      // Verifica si se encontraron documentos
+      if (querySnapshot.docs.isEmpty) {
+        return null; // No se encuentra el vehículo
+      }
+
+      // Obtener el primer documento (asumimos que hay solo uno con este vehicleId)
+      final documentSnapshot = querySnapshot.docs.first;
+      final data = documentSnapshot.data(); // Obtener los datos del documento
+
+      // Convertir manualmente los datos a un objeto Vehicle
+      Vehicle vehicle = Vehicle(
+        id: documentSnapshot.id,
+        plateNumber: data['plateNumber'],
+        brand: data['brand'],
+        model: data['model'],
+        color: data['color'],
+        year: data['year'],
+        customerId: data['customerId'],
+        isActive: data['isActive'] ?? true,
+        createdAt: data['createdAt'],
+        updatedAt: data['updatedAt'],
+      );
+
+      // Convertir la lista de servicios si está presente
+      if (data['services'] != null) {
+        vehicle.services =
+            (data['services'] as List<dynamic>)
+                .map((serviceData) => Service.fromMap(serviceData))
+                .toList();
+      }
+
+      return vehicle; // Retornar el vehículo
+    } catch (e) {
+      print('Error al obtener vehículo: $e');
+      return null; // Devuelve null en caso de error
+    }
+  }
+
   // Create a new vehicle
   Future<void> create(Vehicle newVehicle) async {
     final documentRef = collectionRef.doc();

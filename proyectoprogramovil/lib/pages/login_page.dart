@@ -3,7 +3,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:proyectoprogramovil/components/custom_button.dart';
 import 'package:proyectoprogramovil/helpers/validators.dart';
 import 'package:proyectoprogramovil/services/auth_service.dart';

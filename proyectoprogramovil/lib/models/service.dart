@@ -1,30 +1,40 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:proyectoprogramovil/models/models.dart';
 
 class Service {
   String? id;
   String? description;
-  double? cost;
+  double? laborCost; // Labor cost (mano de obra)
   Timestamp? serviceDate;
   String? status;
   String? vehicleId;
+  List<Product>? products;
+  double? total; // Array of products
 
   Service({
     this.id,
     this.description,
-    this.cost,
+    this.laborCost,
     this.serviceDate,
     this.status,
     this.vehicleId,
+    this.products,
+    this.total,
   });
 
   factory Service.fromMap(Map<String, dynamic> data) {
     return Service(
       id: data['id'],
       description: data['description'],
-      cost: data['cost']?.toDouble(),
+      laborCost: data['laborCost']?.toDouble(),
       serviceDate: data['serviceDate'],
       status: data['status'],
       vehicleId: data['vehicleId'],
+      products:
+          (data['products'] as List<dynamic>?)
+              ?.map((productData) => Product.fromMap(productData))
+              .toList(),
+      total: data['total']?.toDouble(),
     );
   }
 
@@ -32,10 +42,15 @@ class Service {
     return {
       if (id != null) "id": id,
       if (description != null) "description": description,
-      if (cost != null) "cost": cost,
+      if (laborCost != null) "laborCost": laborCost,
       if (serviceDate != null) "serviceDate": serviceDate,
       if (status != null) "status": status,
       if (vehicleId != null) "vehicleId": vehicleId,
+      if (products != null)
+        "products": products?.map((product) => product.toMap()).toList(),
+      if (total != null) "total": total,
     };
   }
+
+ 
 }
