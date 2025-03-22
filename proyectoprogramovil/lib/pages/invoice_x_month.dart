@@ -1,20 +1,6 @@
 import 'package:flutter/material.dart';
-
-class Invoice {
-  final String cliente;
-  final String vehiculo;
-  final List<Map<String, dynamic>> servicios;
-  final double total;
-  final DateTime fecha;
-
-  Invoice({
-    required this.cliente,
-    required this.vehiculo,
-    required this.servicios,
-    required this.total,
-    required this.fecha,
-  });
-}
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:month_picker_dialog/month_picker_dialog.dart';
 
 class InvoiceListPage extends StatefulWidget {
   const InvoiceListPage({super.key});
@@ -24,123 +10,130 @@ class InvoiceListPage extends StatefulWidget {
 }
 
 class _InvoiceListPageState extends State<InvoiceListPage> {
-  // Ejemplo de facturas con fechas de ejemplo
-  List<Invoice> facturas = [
-    Invoice(
-      cliente: "Cliente 1",
-      vehiculo: "Auto 1",
-      servicios: [
-        {'servicio': 'Cambio de aceite', 'costo': 50.0},
-        {'servicio': 'Revisión general', 'costo': 30.0},
-      ],
-      total: 80.0,
-      fecha: DateTime(2025, 3, 1),
-    ),
-    Invoice(
-      cliente: "Cliente 2",
-      vehiculo: "Auto 2",
-      servicios: [
-        {'servicio': 'Reparación frenos', 'costo': 120.0},
-        {'servicio': 'Cambio de llantas', 'costo': 150.0},
-      ],
-      total: 270.0,
-      fecha: DateTime(2025, 3, 3),
-    ),
-  ];
+  Map<String, double> totalFacturasPorCliente = {}; // Cliente y total de facturas
+  DateTime selectedMonth = DateTime.now(); // Mes seleccionado
+  double totalGeneral = 0.0; // Total general de todas las facturas
 
-  double calcularTotalFacturas() {
-    return facturas.fold(0, (total, factura) => total + factura.total);
+  @override
+  void initState() {
+    super.initState();
+    obtenerFacturas();
   }
 
-  void eliminarFactura(int index) {
-    setState(() {
-      facturas.removeAt(index);
-    });
+  // Obtener las facturas del mes seleccionado
+  Future<void> obtenerFacturas() async {
+    try {
+      // Referencia a la colección de facturas
+      QuerySnapshot invoiceSnapshot = await FirebaseFirestore.instance
+          .collection('invoices')
+          .where('invoiceDate', isGreaterThanOrEqualTo: DateTime(selectedMonth.year, selectedMonth.month, 1))
+          .where('invoiceDate', isLessThan: DateTime(selectedMonth.year, selectedMonth.month + 1, 1))
+          .get();
+
+      totalFacturasPorCliente.clear(); // Limpiar el mapa antes de agregar nuevas facturas
+      totalGeneral = 0.0; // Reiniciar el total general
+
+      // Procesar cada factura
+      for (var doc in invoiceSnapshot.docs) {
+        double totalAmount = doc['totalAmount'] ?? 0.0;
+        String vehicleId = doc['vehicleId'];
+
+        // Buscar el customerId en la colección vehicles
+        DocumentSnapshot vehicleDoc = await FirebaseFirestore.instance
+            .collection('vehicles')
+            .doc(vehicleId)
+            .get();
+        String customerId = vehicleDoc['customerId'];
+
+        // Buscar el fullName del cliente en la colección customers
+        QuerySnapshot customerDoc = await FirebaseFirestore.instance
+            .collection('customers')
+            .where('id', isEqualTo: customerId)
+            .get();
+        String customerName = customerDoc.docs[0]['fullName'];
+
+        // Sumar el total de la factura al cliente correspondiente
+        if (totalFacturasPorCliente.containsKey(customerName)) {
+          totalFacturasPorCliente[customerName] = totalFacturasPorCliente[customerName]! + totalAmount;
+        } else {
+          totalFacturasPorCliente[customerName] = totalAmount;
+        }
+
+        // Sumar al total general
+        totalGeneral += totalAmount;
+      }
+
+      // Actualizar la interfaz de usuario
+      setState(() {});
+    } catch (e) {
+      print('Error al obtener facturas: $e');
+    }
   }
 
-  void verDetallesFactura(Invoice factura) {
-    showDialog(
+  // Seleccionar un mes
+  Future<void> selectMonth() async {
+    DateTime? pickedMonth = await showMonthPicker(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Detalles de la Factura"),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Cliente: ${factura.cliente}"),
-              Text("Vehículo: ${factura.vehiculo}"),
-              SizedBox(height: 10),
-              ...factura.servicios.map((servicio) {
-                return Text("${servicio['servicio']}: \$${servicio['costo']}");
-              }).toList(),
-              SizedBox(height: 10),
-              Text("Total: \$${factura.total.toStringAsFixed(2)}"),
-              SizedBox(height: 10),
-              Text("Fecha: ${factura.fecha.toLocal().toString().split(' ')[0]}"), // Formato de fecha
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cerrar'),
-            ),
-          ],
-        );
-      },
+      initialDate: selectedMonth,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
     );
+    if (pickedMonth != null && pickedMonth != selectedMonth) {
+      setState(() {
+        selectedMonth = pickedMonth;
+      });
+      obtenerFacturas();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Facturas del Mes'),
+        title: Text('Total de Facturas por Mes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.calendar_today),
+            onPressed: selectMonth, // Mostrar el selector de mes
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             Text(
-              'Total de todas las facturas: \$${calcularTotalFacturas().toStringAsFixed(2)}',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              'Mes seleccionado: ${selectedMonth.month}/${selectedMonth.year}',
+              style: TextStyle(fontSize: 16),
             ),
-            SizedBox(height: 20),
-            Expanded(
-              child: ListView.builder(
-                itemCount: facturas.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(facturas[index].cliente),
-                      subtitle: Text(
-                          'Fecha: ${facturas[index].fecha.toLocal().toString().split(' ')[0]} | Total: \$${facturas[index].total.toStringAsFixed(2)}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.remove_red_eye, color: Colors.blue),
-                            onPressed: () {
-                              verDetallesFactura(facturas[index]);
-                            },
+            totalFacturasPorCliente.isEmpty
+                ? Center(child: Text('Cargando facturas...'))
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: totalFacturasPorCliente.length,
+                      itemBuilder: (context, index) {
+                        String cliente = totalFacturasPorCliente.keys.elementAt(
+                          index,
+                        );
+                        double total = totalFacturasPorCliente[cliente]!;
+
+                        return Card(
+                          child: ListTile(
+                            title: Text(cliente),
+                            subtitle: Text(
+                              'Total de facturas: \$${total.toStringAsFixed(2)}',
+                            ),
                           ),
-                          IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              eliminarFactura(index);
-                            },
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        verDetallesFactura(facturas[index]);
+                        );
                       },
                     ),
-                  );
-                },
+                  ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Total General: \$${totalGeneral.toStringAsFixed(2)}',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
           ],

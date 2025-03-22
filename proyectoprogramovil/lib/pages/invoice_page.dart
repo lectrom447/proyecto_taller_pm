@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:proyectoprogramovil/models/models.dart';
 
 class InvoicePage extends StatefulWidget {
   const InvoicePage({super.key});
@@ -8,60 +10,157 @@ class InvoicePage extends StatefulWidget {
 }
 
 class _InvoicePageState extends State<InvoicePage> {
-  TextEditingController clienteController = TextEditingController();
-  TextEditingController vehiculoController = TextEditingController();
   TextEditingController servicioController = TextEditingController();
   TextEditingController costoController = TextEditingController();
-  TextEditingController codigoDescuentoController = TextEditingController(); // Controlador para código de descuento
+  TextEditingController codigoDescuentoController = TextEditingController();
 
-  List<Map<String, dynamic>> servicios = [];
-  double descuento = 0.0; // Variable para almacenar el porcentaje de descuento
 
-  void agregarServicio() {
-    String servicio = servicioController.text;
-    double? costo = double.tryParse(costoController.text);
+  double descuento = 0.0;
+  List<Vehicle> vehicles = []; // List of vehicles
+  String? selectedVehicleId;
+  List<Map<String, dynamic>> selectedVehicleServices = [];
 
-    if (servicio.isNotEmpty && costo != null) {
+  // Function to fetch vehicles
+  Future<void> fetchVehicles() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('vehicles').get();
+
       setState(() {
-        servicios.add({'servicio': servicio, 'costo': costo});
-        servicioController.clear();
-        costoController.clear();
+        vehicles =
+            querySnapshot.docs
+                .map((doc) => Vehicle.fromFirestore(doc, SnapshotOptions()))
+                .toList();
       });
+    } catch (e) {
+      print('Error al obtener vehículos: $e');
     }
   }
 
-  double calcularTotal() {
-    double total = servicios.fold(0, (total, item) => total + item['costo']);
-    return total - (total * descuento / 100); // Aplicar descuento al total
+  @override
+  void initState() {
+    super.initState();
+    fetchVehicles(); // Fetch vehicles
   }
 
-  void aplicarDescuento() {
-    String codigo = codigoDescuentoController.text;
+  // Function to fetch services of selected vehicle
+  Future<void> fetchServicesForVehicle(String vehicleDocId) async {
+    try {
+      final vehicleDoc =
+          await FirebaseFirestore.instance
+              .collection('vehicles')
+              .doc(vehicleDocId)
+              .get();
 
-    setState(() {
-      if (codigo == 'DESCUENTO10') {
-        descuento = 10.0; // Aplicar 10% de descuento
-      } else if (codigo == 'DESCUENTO15') {
-        descuento = 15.0; // Aplicar 15% de descuento
-      } else if (codigo == 'DESCUENTO20') {
-        descuento = 20.0; // Aplicar 20% de descuento
-      } else {
-        descuento = 0.0; // Si el código no es válido, no hay descuento
+      // Assuming services are stored inside a 'services' field in each vehicle document
+      if (vehicleDoc.exists) {
+        var servicesData = vehicleDoc['services'];
+        if (servicesData != null) {
+          setState(() {
+            selectedVehicleServices = List<Map<String, dynamic>>.from(
+              servicesData,
+            );
+            print(selectedVehicleServices);
+          });
+        }
       }
+    } catch (e) {
+      print('Error al obtener servicios para el vehículo: $e');
+    }
+  }
+
+  
+
+double calcularTotal() {
+  double total = selectedVehicleServices.fold(0, (total, item) => total + item['total']);
+  return total - (total * descuento);
+}
+
+
+  void aplicarDescuento() async {
+  String codigo = codigoDescuentoController.text;
+
+  if (codigo.isEmpty) {
+    setState(() {
+      descuento = 0.0; // Sin código, no hay descuento
+    });
+    return;
+  }
+
+  try {
+    // Referencia a la colección 'discounts'
+    CollectionReference descuentosRef = FirebaseFirestore.instance.collection('discounts');
+
+    // Buscar documento con el código de descuento ingresado
+    QuerySnapshot querySnapshot = await descuentosRef.where('codeName', isEqualTo: codigo).get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      // Suponiendo que el descuento está en el campo 'porcentaje'
+      double porcentaje = querySnapshot.docs.first.get('amount').toDouble();
+      setState(() {
+        descuento = porcentaje/100;
+      });
+      print('Descuento aplicado: $descuento%');
+    } else {
+      setState(() {
+        descuento = 0.0;
+      });
+      print('Código de descuento no válido');
+    }
+  } catch (e) {
+    print('Error al buscar el descuento: $e');
+    setState(() {
+      descuento = 0.0;
     });
   }
+}
 
-  void generarFactura() {
-    if (clienteController.text.isEmpty || vehiculoController.text.isEmpty || servicios.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Completa todos los campos y agrega al menos un servicio.')),
-      );
-      return;
-    }
-
-    // Aquí puedes generar un PDF o guardar los datos en la base de datos
-    print('Factura generada');
+  void generarFactura() async {
+  if (selectedVehicleId == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Completa todos los campos y agrega al menos un servicio.',
+        ),
+      ),
+    );
+    return;
   }
+
+  try {
+    double totalAmount = calcularTotal(); // Utilizamos la función calcularTotal() para obtener el total
+    String vehicleId = selectedVehicleId!;
+    DateTime invoiceDate = DateTime.now();
+    bool isPaid = true;
+
+    // Referencia a la colección 'invoices'
+    CollectionReference invoicesRef = FirebaseFirestore.instance.collection('invoices');
+
+    // Crear el documento con los datos de la factura
+    await invoicesRef.add({
+      'totalAmount': totalAmount,
+      'vehicleId': vehicleId,
+      'invoiceDate': invoiceDate,
+      'isPaid': isPaid,
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Factura generada exitosamente'),
+        backgroundColor: Colors.green,
+      ),
+    );
+    print('Factura generada con éxito');
+  } catch (e) {
+    print('Error al generar la factura: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error al generar la factura. Inténtalo de nuevo.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -74,24 +173,62 @@ class _InvoicePageState extends State<InvoicePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            _buildTextField(clienteController, 'Nombre del Cliente', Icons.person),
-            SizedBox(height: 10),
-            _buildTextField(vehiculoController, 'Datos del Vehículo', Icons.directions_car),
-            SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(child: _buildTextField(servicioController, 'Servicio', Icons.build)),
-                SizedBox(width: 10),
-                Expanded(child: _buildTextField(costoController, 'Costo', Icons.attach_money, isNumber: true)),
-                IconButton(
-                  icon: Icon(Icons.add_circle, color: Colors.green, size: 30),
-                  onPressed: agregarServicio,
-                ),
-              ],
+            // Dropdown to select vehicle
+            DropdownButtonFormField<String>(
+              value: selectedVehicleId,
+              hint: Text('Seleccionar Vehículo'),
+              onChanged: (String? value) {
+                setState(() {
+                  selectedVehicleId = value;
+                });
+                if (value != null) {
+                  fetchServicesForVehicle(value);
+                }
+              },
+              items:
+                  vehicles.map((Vehicle vehicle) {
+                    return DropdownMenuItem<String>(
+                      value: vehicle.id,
+                      child: Text(vehicle.model!),
+                    );
+                  }).toList(),
             ),
+            SizedBox(height: 20),
+            // Show services of selected vehicle
+            if (selectedVehicleServices.isNotEmpty) ...[
+              Text(
+                'Servicios del vehículo:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: selectedVehicleServices.length,
+                itemBuilder: (context, index) {
+                  var service = selectedVehicleServices[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text(service['description']),
+                      subtitle: Text(
+                        '\$${service['total'].toStringAsFixed(2)}',
+                      ),
+                    
+                    ),
+                  );
+                },
+              ),
+            ],
             SizedBox(height: 10),
-            // Campo para ingresar el código de descuento
-            _buildTextField(codigoDescuentoController, 'Código de Descuento', Icons.discount),
+            // Remove manual entry fields for service and cost
+            if (selectedVehicleServices.isEmpty) ...[Row(children: [
+                 
+                ],
+              )],
+            SizedBox(height: 10),
+            _buildTextField(
+              codigoDescuentoController,
+              'Código de Descuento',
+              Icons.discount,
+            ),
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: aplicarDescuento,
@@ -99,27 +236,6 @@ class _InvoicePageState extends State<InvoicePage> {
               child: Text('Aplicar Descuento'),
             ),
             SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: servicios.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    child: ListTile(
-                      title: Text(servicios[index]['servicio']),
-                      subtitle: Text('\$${servicios[index]['costo'].toStringAsFixed(2)}'),
-                      trailing: IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          setState(() {
-                            servicios.removeAt(index);
-                          });
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
             Text(
               'Total: \$${calcularTotal().toStringAsFixed(2)}',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -136,7 +252,12 @@ class _InvoicePageState extends State<InvoicePage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hintText, IconData icon, {bool isNumber = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hintText,
+    IconData icon, {
+    bool isNumber = false,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,

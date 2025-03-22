@@ -3,20 +3,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Invoice {
   final String invoiceId;  // Identificador único de la factura
-  final String customerId;  // Identificador del cliente
   final String vehicleId;  // Identificador del vehículo // Lista de servicios realizados
   final DateTime invoiceDate;  // Fecha de la factura
-  final String status;  // Estado de la factura (ej. "Pagada", "Pendiente")
   final double totalAmount;  // Total de los servicios
+  final bool isPaid;
 
   // Constructor
   Invoice({
     required this.invoiceId,
-    required this.customerId,
     required this.vehicleId,
     required this.invoiceDate,
-    required this.status,
     required this.totalAmount,
+    required this.isPaid,
   });
 
 
@@ -24,11 +22,10 @@ class Invoice {
   Map<String, dynamic> toMap() {
     return {
       'invoiceId': invoiceId,
-      'customerId': customerId,
       'vehicleId': vehicleId,
       'invoiceDate': invoiceDate,
-      'status': status,
       'totalAmount': totalAmount,
+       'isPaid': isPaid,
     };
   }
 
@@ -36,11 +33,10 @@ class Invoice {
   factory Invoice.fromMap(Map<String, dynamic> map) {
     return Invoice(
       invoiceId: map['invoiceId'],
-      customerId: map['customerId'],
       vehicleId: map['vehicleId'],
       invoiceDate: (map['invoiceDate'] as Timestamp).toDate(),
-      status: map['status'],
       totalAmount: map['totalAmount'],
+      isPaid: map['isPaid'],
     );
   }
 }
