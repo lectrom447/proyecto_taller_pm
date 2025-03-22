@@ -3,41 +3,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:proyectoprogramovil/components/custom_button.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
   // Controllers for the text fields
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
+
+  bool _isLoading = false;
 
   // Handle registration
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _register() async {
     String email = emailController.text.trim();
-    String username = usernameController.text.trim();
+    String fullName = fullNameController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
     if (email.isNotEmpty &&
-        username.isNotEmpty &&
+        fullName.isNotEmpty &&
         password.isNotEmpty &&
         confirmPassword.isNotEmpty) {
       if (password == confirmPassword) {
         try {
+          setState(() {
+            _isLoading = true;
+          });
           UserCredential userCredential = await _auth
               .createUserWithEmailAndPassword(email: email, password: password);
 
           if (userCredential.user != null) {
+            await userCredential.user!.updateDisplayName(fullName);
+
+            if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Registration successful!'),
@@ -47,12 +56,17 @@ class _RegisterPageState extends State<RegisterPage> {
             // Aquí puedes navegar a otra pantalla si deseas
           }
         } catch (e) {
+          if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${e.toString()}'),
               backgroundColor: Colors.red,
             ),
           );
+          setState(() {
+            _isLoading = false;
+          });
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,6 +122,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   children: [
                     // Email field
                     TextFormField(
+                      enabled: !_isLoading,
                       controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
@@ -121,11 +136,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // Username field
                     TextFormField(
-                      controller: usernameController,
+                      enabled: !_isLoading,
+                      controller: fullNameController,
                       keyboardType: TextInputType.text,
                       decoration: InputDecoration(
-                        labelText: 'Username',
-                        hintText: 'Enter your username',
+                        labelText: 'Full Name',
+                        hintText: 'Enter your Full Name',
                         prefixIcon: Icon(Icons.person),
                         border: OutlineInputBorder(),
                       ),
@@ -134,6 +150,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // Password field
                     TextFormField(
+                      enabled: !_isLoading,
                       controller: passwordController,
                       keyboardType: TextInputType.visiblePassword,
                       decoration: InputDecoration(
@@ -148,6 +165,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     // Confirm Password field
                     TextFormField(
+                      enabled: !_isLoading,
                       controller: confirmPasswordController,
                       keyboardType: TextInputType.visiblePassword,
                       decoration: InputDecoration(
@@ -161,9 +179,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     SizedBox(height: 30),
 
                     // Register button
-                    ElevatedButton(
+                    // ElevatedButton(
+                    //   onPressed: _register,
+                    //   child: Text('Register'),
+                    // ),
+                    CustomButton(
+                      text: 'Register',
                       onPressed: _register,
-                      child: Text('Register'),
+                      isLoading: _isLoading,
                     ),
 
                     SizedBox(height: 20),
