@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/models/models.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Importa Firebase Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:proyectoprogramovil/state/app_state.dart'; // Importa Firebase Firestore
 
 class AddProductPage extends StatefulWidget {
   final Function(Product)? onProductAdded;
@@ -20,6 +22,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: Text("Add Product"),
@@ -43,35 +47,47 @@ class _AddProductPageState extends State<AddProductPage> {
             TextField(
               controller: _productPriceController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: 'Price', prefixIcon: Icon(Icons.attach_money)),
+              decoration: InputDecoration(
+                labelText: 'Price',
+                prefixIcon: Icon(Icons.attach_money),
+              ),
             ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
                 final productName = _productNameController.text;
-                final productPrice = double.tryParse(_productPriceController.text);
+                final productPrice = double.tryParse(
+                  _productPriceController.text,
+                );
 
                 if (productName.isNotEmpty && productPrice != null) {
                   // Crea el producto
                   Product newProduct = Product(
                     name: productName,
                     price: productPrice,
-                    quantity: 0, // Valor predeterminado de la cantidad
+                    quantity: 0,
+                    workshopId:
+                        appState
+                            .currentProfile!
+                            .workshopId!, // Valor predeterminado de la cantidad
                   );
 
                   // Guardar en Firestore
                   await _addProductToFirestore(newProduct);
-
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                  }
                   // Llamar al callback para informar que el producto fue agregado
                   if (widget.onProductAdded != null) {
                     widget.onProductAdded!(newProduct);
                   }
-
                 } else {
                   // Mostrar un mensaje si falta algún campo
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Please fill all fields correctly."),
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Please fill all fields correctly."),
+                    ),
+                  );
                 }
               },
               child: Text('Add Product'),
@@ -89,6 +105,7 @@ class _AddProductPageState extends State<AddProductPage> {
         'name': product.name,
         'price': product.price,
         'quantity': product.quantity,
+        'workshopId': product.workshopId,
       });
       print("Product added to Firestore");
     } catch (e) {

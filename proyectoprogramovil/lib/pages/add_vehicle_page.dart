@@ -6,8 +6,9 @@ import 'package:proyectoprogramovil/repositories/vehicle_repository.dart';
 
 class AddVehiclePage extends StatefulWidget {
   final String? customerId; // Pass the customerId when navigating to this page
+  final String? workshopId; // Pass the customerId when navigating to this page
 
-  AddVehiclePage({required this.customerId});
+  AddVehiclePage({required this.customerId, required this.workshopId});
 
   @override
   _AddVehiclePageState createState() => _AddVehiclePageState();
@@ -22,66 +23,67 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   String? _model;
   String? _color;
   int? _year;
-void _saveVehicle() async {
-  if (_formKey.currentState?.validate() ?? false) {
-    _formKey.currentState?.save();
+  void _saveVehicle() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      _formKey.currentState?.save();
 
-    Vehicle newVehicle = Vehicle(
-      plateNumber: _plateNumber,
-      brand: _brand,
-      model: _model,
-      color: _color,
-      year: _year,
-      customerId: widget.customerId,
-      isActive: true,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    );
+      Vehicle newVehicle = Vehicle(
+        workshopId: widget.workshopId,
+        plateNumber: _plateNumber,
+        brand: _brand,
+        model: _model,
+        color: _color,
+        year: _year,
+        customerId: widget.customerId,
+        isActive: true,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      );
 
-    try {
-      final createdVehicle = await _vehicleRepository.create(newVehicle);
+      try {
+        final createdVehicle = await _vehicleRepository.create(newVehicle);
 
+        final customerRef = FirebaseFirestore.instance
+            .collection('customers')
+            .doc(widget.customerId);
 
-      final customerRef = FirebaseFirestore.instance.collection('customers').doc(widget.customerId);
+        final customerSnapshot = await customerRef.get();
 
-      final customerSnapshot = await customerRef.get();
+        if (customerSnapshot.exists) {
+          final customerData = customerSnapshot.data() as Map<String, dynamic>;
 
-      if (customerSnapshot.exists) {
-        final customerData = customerSnapshot.data() as Map<String, dynamic>;
-        
-        customerData['vehicleId'] = createdVehicle.id;
+          customerData['vehicleId'] = createdVehicle.id;
 
-        // Now update the customer with the new vehicleId
-        await customerRef.update(customerData);
+          // Now update the customer with the new vehicleId
+          await customerRef.update(customerData);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Customer updated with vehicle!')),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Customer updated with vehicle!')),
+          );
+        }
+
+        // Show success and pop the current screen
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Vehicle added successfully!')));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CustomersPage(),
+          ), // Make sure to import CustomersPage
         );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding vehicle: $e')));
       }
-
-      // Show success and pop the current screen
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vehicle added successfully!')),
-      );
-       Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => CustomersPage()), // Make sure to import CustomersPage
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding vehicle: $e')),
-      );
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Add Vehicle'),
-      ),
+      appBar: AppBar(title: Text('Add Vehicle')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

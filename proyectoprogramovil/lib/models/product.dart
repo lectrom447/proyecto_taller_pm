@@ -1,16 +1,11 @@
-
 class Product {
   String? id;
   String? name;
   double? price;
   int? quantity;
+  String? workshopId;
 
-  Product({
-    this.id,
-    this.name,
-    this.price,
-    this.quantity,
-  });
+  Product({this.id, this.name, this.price, this.quantity, this.workshopId});
 
   factory Product.fromMap(Map<String, dynamic> data) {
     return Product(
@@ -18,6 +13,7 @@ class Product {
       name: data['name'],
       price: data['price']?.toDouble(),
       quantity: data['quantity'],
+      workshopId: data['workshopId'],
     );
   }
 
@@ -27,6 +23,7 @@ class Product {
       if (name != null) "name": name,
       if (price != null) "price": price,
       if (quantity != null) "quantity": quantity,
+      if (workshopId != null) "workshopId": workshopId,
     };
   }
 }

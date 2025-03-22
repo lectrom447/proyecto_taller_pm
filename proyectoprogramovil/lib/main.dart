@@ -2,7 +2,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/firebase_options.dart';
+import 'package:proyectoprogramovil/pages/access_codes_page.dart';
+import 'package:proyectoprogramovil/pages/add_access_code_page.dart';
 import 'package:proyectoprogramovil/pages/add_customer_page.dart';
+import 'package:proyectoprogramovil/pages/discount_list_page.dart';
+import 'package:proyectoprogramovil/pages/join_workshop_page.dart';
 import 'package:proyectoprogramovil/pages/pages.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
 import 'package:proyectoprogramovil/theme/app_theme.dart';
@@ -29,9 +33,18 @@ class MyApp extends StatelessWidget {
       initialRoute: 'main',
       routes: {
         'main': (_) => MainAuthGuard(),
-        // 'login': (_) => LoginPage(),
         'add_customer': (_) => AddCustomerPage(),
         'add_workshop': (_) => AddWorkshopPage(),
+        'access_codes': (_) => AccessCodesPage(),
+        'add_access_code': (_) => AddAccessCodePage(),
+        'join_workshop': (_) => JoinWorkshopPage(),
+        'customers': (_) => CustomersPage(),
+        'billing_report': (_) => InvoiceListPage(),
+        'add_invoice': (_) => InvoicePage(),
+        'list_vehicles': (_) => VehicleServiceStatusScreen(),
+        'add_product': (_) => AddProductPage(),
+        'list_discounts': (_) => DiscountListScreen(),
+        'add_discount': (_) => DiscountPage(),
       },
     );
   }

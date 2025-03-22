@@ -5,9 +5,7 @@ import 'package:proyectoprogramovil/components/components.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
 
 class NoProfileFoundPage extends StatelessWidget {
-  NoProfileFoundPage({super.key});
-
-  final _user = FirebaseAuth.instance.currentUser!;
+  const NoProfileFoundPage({super.key});
 
   void _fandleRegisterWorkshop(BuildContext context) async {
     await Navigator.of(context).pushNamed('add_workshop');
@@ -18,6 +16,13 @@ class NoProfileFoundPage extends StatelessWidget {
   _handleLogut(BuildContext context) async {
     final appState = Provider.of<AppState>(context, listen: false);
     appState.cleanCurrentProfile();
+    await FirebaseAuth.instance.signOut();
+  }
+
+  _handleJoin(BuildContext context) async {
+    await Navigator.of(context).pushNamed('join_workshop');
+    if (!context.mounted) return;
+    Navigator.of(context).pushReplacementNamed('main');
   }
 
   @override
@@ -46,17 +51,23 @@ class NoProfileFoundPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ask your workshop administrator to add you using the email:',
+                      'Join a workshop using an access code provided by the administrator.',
                     ),
                     SizedBox(height: 10),
-                    Text(
-                      textAlign: TextAlign.end,
-                      _user.email!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    CustomButton(
+                      text: 'Join now!',
+                      color: Colors.green.shade500,
+                      expand: true,
+                      onPressed: () => _handleJoin(context),
                     ),
+                    // Text(
+                    //   textAlign: TextAlign.end,
+                    //   _user.email!,
+                    //   style: TextStyle(
+                    //     fontSize: 15,
+                    //     fontWeight: FontWeight.bold,
+                    //   ),
+                    // ),
                     SizedBox(height: 10),
                     Divider(),
                     SizedBox(height: 10),

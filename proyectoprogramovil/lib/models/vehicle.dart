@@ -11,6 +11,7 @@ class Vehicle {
   int? year;
   String? customerId;
   Customer? customer;
+  String? workshopId;
   List<Service>? services;
   bool isActive;
   Timestamp? createdAt;
@@ -29,6 +30,7 @@ class Vehicle {
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
+    this.workshopId,
   });
 
   factory Vehicle.fromFirestore(
@@ -40,14 +42,16 @@ class Vehicle {
     return Vehicle(
       id: snapshot.id,
       plateNumber: data?['plateNumber'],
+      workshopId: data?['workshopId'],
       brand: data?['brand'],
       model: data?['model'],
       color: data?['color'],
       year: data?['year'],
       customerId: data?['customerId'],
-      services: (data?['services'] as List<dynamic>?)
-          ?.map((serviceData) => Service.fromMap(serviceData))
-          .toList(),
+      services:
+          (data?['services'] as List<dynamic>?)
+              ?.map((serviceData) => Service.fromMap(serviceData))
+              .toList(),
       isActive: data?['isActive'] ?? true,
       createdAt: data?['createdAt'],
       updatedAt: data?['updatedAt'],
@@ -58,6 +62,7 @@ class Vehicle {
     return {
       if (plateNumber != null) "plateNumber": plateNumber,
       if (brand != null) "brand": brand,
+      if (workshopId != null) "workshopId": workshopId,
       if (model != null) "model": model,
       if (color != null) "color": color,
       if (year != null) "year": year,

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/models/models.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class InvoicePage extends StatefulWidget {
   const InvoicePage({super.key});
@@ -14,7 +16,6 @@ class _InvoicePageState extends State<InvoicePage> {
   TextEditingController costoController = TextEditingController();
   TextEditingController codigoDescuentoController = TextEditingController();
 
-
   double descuento = 0.0;
   List<Vehicle> vehicles = []; // List of vehicles
   String? selectedVehicleId;
@@ -22,9 +23,16 @@ class _InvoicePageState extends State<InvoicePage> {
 
   // Function to fetch vehicles
   Future<void> fetchVehicles() async {
+    final appState = Provider.of<AppState>(context, listen: false);
     try {
       final querySnapshot =
-          await FirebaseFirestore.instance.collection('vehicles').get();
+          await FirebaseFirestore.instance
+              .collection('vehicles')
+              .where(
+                'workshopId',
+                isEqualTo: appState.currentProfile!.workshopId,
+              )
+              .get();
 
       setState(() {
         vehicles =
@@ -69,98 +77,109 @@ class _InvoicePageState extends State<InvoicePage> {
     }
   }
 
-  
-
-double calcularTotal() {
-  double total = selectedVehicleServices.fold(0, (total, item) => total + item['total']);
-  return total - (total * descuento);
-}
-
-
-  void aplicarDescuento() async {
-  String codigo = codigoDescuentoController.text;
-
-  if (codigo.isEmpty) {
-    setState(() {
-      descuento = 0.0; // Sin código, no hay descuento
-    });
-    return;
+  double calcularTotal() {
+    double total = selectedVehicleServices.fold(
+      0,
+      (total, item) => total + item['total'],
+    );
+    return total - (total * descuento);
   }
 
-  try {
-    // Referencia a la colección 'discounts'
-    CollectionReference descuentosRef = FirebaseFirestore.instance.collection('discounts');
+  void aplicarDescuento() async {
+    String codigo = codigoDescuentoController.text;
 
-    // Buscar documento con el código de descuento ingresado
-    QuerySnapshot querySnapshot = await descuentosRef.where('codeName', isEqualTo: codigo).get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      // Suponiendo que el descuento está en el campo 'porcentaje'
-      double porcentaje = querySnapshot.docs.first.get('amount').toDouble();
+    if (codigo.isEmpty) {
       setState(() {
-        descuento = porcentaje/100;
+        descuento = 0.0; // Sin código, no hay descuento
       });
-      print('Descuento aplicado: $descuento%');
-    } else {
+      return;
+    }
+
+    try {
+      // Referencia a la colección 'discounts'
+      CollectionReference descuentosRef = FirebaseFirestore.instance.collection(
+        'discounts',
+      );
+
+      // Buscar documento con el código de descuento ingresado
+      QuerySnapshot querySnapshot =
+          await descuentosRef.where('codeName', isEqualTo: codigo).get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // Suponiendo que el descuento está en el campo 'porcentaje'
+        double porcentaje = querySnapshot.docs.first.get('amount').toDouble();
+        setState(() {
+          descuento = porcentaje / 100;
+        });
+        print('Descuento aplicado: $descuento%');
+      } else {
+        setState(() {
+          descuento = 0.0;
+        });
+        print('Código de descuento no válido');
+      }
+    } catch (e) {
+      print('Error al buscar el descuento: $e');
       setState(() {
         descuento = 0.0;
       });
-      print('Código de descuento no válido');
     }
-  } catch (e) {
-    print('Error al buscar el descuento: $e');
-    setState(() {
-      descuento = 0.0;
-    });
   }
-}
 
   void generarFactura() async {
-  if (selectedVehicleId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Completa todos los campos y agrega al menos un servicio.',
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    if (selectedVehicleId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Completa todos los campos y agrega al menos un servicio.',
+          ),
         ),
-      ),
-    );
-    return;
+      );
+      return;
+    }
+
+    try {
+      double totalAmount =
+          calcularTotal(); // Utilizamos la función calcularTotal() para obtener el total
+      String vehicleId = selectedVehicleId!;
+      DateTime invoiceDate = DateTime.now();
+      bool isPaid = true;
+
+      // Referencia a la colección 'invoices'
+      CollectionReference invoicesRef = FirebaseFirestore.instance.collection(
+        'invoices',
+      );
+
+      // Crear el documento con los datos de la factura
+      await invoicesRef.add({
+        'totalAmount': totalAmount,
+        'vehicleId': vehicleId,
+        'invoiceDate': invoiceDate,
+        'isPaid': isPaid,
+        'workshopId': appState.currentProfile!.workshopId,
+      });
+      if (!mounted) return;
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Factura generada exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      print('Factura generada con éxito');
+    } catch (e) {
+      print('Error al generar la factura: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al generar la factura. Inténtalo de nuevo.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
-
-  try {
-    double totalAmount = calcularTotal(); // Utilizamos la función calcularTotal() para obtener el total
-    String vehicleId = selectedVehicleId!;
-    DateTime invoiceDate = DateTime.now();
-    bool isPaid = true;
-
-    // Referencia a la colección 'invoices'
-    CollectionReference invoicesRef = FirebaseFirestore.instance.collection('invoices');
-
-    // Crear el documento con los datos de la factura
-    await invoicesRef.add({
-      'totalAmount': totalAmount,
-      'vehicleId': vehicleId,
-      'invoiceDate': invoiceDate,
-      'isPaid': isPaid,
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Factura generada exitosamente'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    print('Factura generada con éxito');
-  } catch (e) {
-    print('Error al generar la factura: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error al generar la factura. Inténtalo de nuevo.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +230,6 @@ double calcularTotal() {
                       subtitle: Text(
                         '\$${service['total'].toStringAsFixed(2)}',
                       ),
-                    
                     ),
                   );
                 },

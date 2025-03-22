@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/components/components.dart';
 import 'package:proyectoprogramovil/models/models.dart';
-import 'package:proyectoprogramovil/repositories/repositories.dart';
+import 'package:proyectoprogramovil/repositories/access_code_repository.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
 
-class CustomersPage extends StatefulWidget {
-  const CustomersPage({super.key});
+class AccessCodesPage extends StatefulWidget {
+  const AccessCodesPage({super.key});
 
   @override
-  State<CustomersPage> createState() => _CustomersPageState();
+  State<AccessCodesPage> createState() => _AccessCodesPageState();
 }
 
-class _CustomersPageState extends State<CustomersPage> {
-  final CustomerRepository _customerRepository = CustomerRepository();
+class _AccessCodesPageState extends State<AccessCodesPage> {
+  final AccessCodeRepository _accessCodeRepository = AccessCodeRepository();
   late final AppState _appState;
   bool _isLoading = true;
 
-  List<Customer> _customers = [];
+  List<AccessCode> _accessCodes = [];
 
   void _handleCreate() async {
-    final isCompleted = await Navigator.pushNamed(context, 'add_customer');
+    final isCompleted = await Navigator.pushNamed(context, 'add_access_code');
 
     if (isCompleted != true) return;
 
@@ -28,12 +28,12 @@ class _CustomersPageState extends State<CustomersPage> {
   }
 
   Future<void> _loadData() async {
-    final customers = await _customerRepository.findAll(
+    final accessCodes = await _accessCodeRepository.findAll(
       _appState.currentProfile!.workshopId!,
     );
     setState(() {
       _isLoading = false;
-      _customers = customers;
+      _accessCodes = accessCodes;
     });
   }
 
@@ -47,7 +47,7 @@ class _CustomersPageState extends State<CustomersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Customers')),
+      appBar: AppBar(title: Text('Access Codes')),
       floatingActionButton: FloatingActionButton(
         onPressed: _handleCreate,
         child: Icon(Icons.add),
@@ -62,15 +62,13 @@ class _CustomersPageState extends State<CustomersPage> {
                       child: Divider(height: 1),
                     ),
 
-                itemCount: _customers.length,
+                itemCount: _accessCodes.length,
                 itemBuilder: (context, index) {
-                  final customer = _customers[index];
+                  final acessCode = _accessCodes[index];
 
                   return ListTile(
-                    title: Text(customer.fullName!),
-                    subtitle: Text(
-                      'Phone: ${customer.phoneNumber} \nEmail: ${(customer.email != null && customer.email!.isNotEmpty) ? customer.email : 'Not registered'}',
-                    ),
+                    title: Text(acessCode.code!.toString()),
+                    subtitle: Text('Role: ${acessCode.role}'),
                   );
                 },
               ),

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:month_picker_dialog/month_picker_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:proyectoprogramovil/components/components.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class InvoiceListPage extends StatefulWidget {
   const InvoiceListPage({super.key});
@@ -17,6 +20,8 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
   double totalGeneral = 0.0; // Total general de todas las facturas
   int cantidadFacturas = 0;
 
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +30,10 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
 
   // Obtener las facturas del mes seleccionado
   Future<void> obtenerFacturas() async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    setState(() {
+      isLoading = true;
+    });
     try {
       QuerySnapshot invoiceSnapshot =
           await FirebaseFirestore.instance
@@ -44,6 +53,13 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
                   selectedMonth.month + 1,
                   1,
                 ),
+              )
+              .where(
+                'workshopId',
+                isEqualTo:
+                    (appState.currentProfile == null)
+                        ? 'nn'
+                        : appState.currentProfile!.workshopId,
               )
               .get();
 
@@ -73,7 +89,7 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
         String customerName = 'Sin nombre';
         if (customerDoc.exists) {
           // Si el documento existe, accede a los datos de manera segura
-           customerName =
+          customerName =
               (customerDoc.data() as Map<String, dynamic>)['fullName'];
         } else {
           // Si el documento no existe, maneja el caso de manera apropiada
@@ -96,9 +112,14 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
         totalGeneral += totalAmount;
       }
 
-      setState(() {});
+      setState(() {
+        isLoading = false;
+      });
     } catch (e) {
       print('Error al obtener facturas: $e');
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -247,8 +268,10 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
               'Mes seleccionado: ${selectedMonth.month}/${selectedMonth.year}',
               style: TextStyle(fontSize: 16),
             ),
-            facturasPorCliente.isEmpty
-                ? Center(child: Text('Cargando facturas...'))
+            isLoading
+                ? PageLoading()
+                : (facturasPorCliente.isEmpty)
+                ? Center(child: Text('No hay datos para mostrar'))
                 : Expanded(
                   child: ListView.builder(
                     itemCount: facturasPorCliente.length,

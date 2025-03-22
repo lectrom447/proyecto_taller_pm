@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/models/models.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class VehicleServiceStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     return Scaffold(
       appBar: AppBar(title: Text('Estado del Servicio'), centerTitle: true),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('vehicles').snapshots(),
+        stream:
+            FirebaseFirestore.instance
+                .collection('vehicles')
+                .where(
+                  'workshopId',
+                  isEqualTo: appState.currentProfile!.workshopId,
+                )
+                .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -108,6 +118,7 @@ class ServiceDetailScreen extends StatefulWidget {
 class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -267,6 +278,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   }
 
   void _addService(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     showDialog(
       context: context,
       builder: (context) {
@@ -296,7 +308,13 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   // Selección de producto como TextField
                   FutureBuilder<QuerySnapshot>(
                     future:
-                        FirebaseFirestore.instance.collection('products').get(),
+                        FirebaseFirestore.instance
+                            .collection('products')
+                            .where(
+                              'workshopId',
+                              isEqualTo: appState.currentProfile!.workshopId,
+                            )
+                            .get(),
                     builder: (context, productSnapshot) {
                       if (productSnapshot.connectionState ==
                           ConnectionState.waiting) {
@@ -407,7 +425,11 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         status: serviceStatus,
                         vehicleId: widget.vehicleId,
                         products: [
-                          Product(name: selectedProduct, quantity: quantity),
+                          Product(
+                            name: selectedProduct,
+                            quantity: quantity,
+                            workshopId: appState.currentProfile!.workshopId!,
+                          ),
                         ],
                         total: total, // Agregar el total al servicio
                       );

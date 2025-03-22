@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/components/components.dart';
+import 'package:proyectoprogramovil/pages/main_option_page.dart';
 import 'package:proyectoprogramovil/pages/pages.dart';
 import 'package:proyectoprogramovil/repositories/repositories.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
@@ -42,6 +43,8 @@ class _MainPageState extends State<MainPage> {
       ).setCurrentProfile(profiles[0]);
     }
 
+    if (!mounted) return;
+
     setState(() {
       _loadingProfileData = false;
     });
@@ -57,13 +60,7 @@ class _MainPageState extends State<MainPage> {
                 // ? Scaffold(body: Text('No Hay Pefil'))
                 ? NoProfileFoundPage()
                 : Scaffold(
-                  body:
-                      [
-                        HomePage(),
-                        CustomersPage(),
-                        ServicesPage(),
-                        ProfilePage(),
-                      ][_activeIndex],
+                  body: [MainOptionPage(), ProfilePage()][_activeIndex],
                   bottomNavigationBar: NavigationBar(
                     selectedIndex: _activeIndex,
                     onDestinationSelected: _handleDestinationChange,
@@ -72,22 +69,6 @@ class _MainPageState extends State<MainPage> {
                         icon: Icon(Icons.home_outlined),
                         selectedIcon: Icon(Icons.home),
                         label: 'Home',
-                      ),
-                      if (appState.currentProfile!.role == 'cashier')
-                        NavigationDestination(
-                          icon: Icon(Icons.receipt),
-                          selectedIcon: Icon(Icons.home),
-                          label: 'Bills',
-                        ),
-                      NavigationDestination(
-                        icon: Icon(Icons.people_alt_outlined),
-                        selectedIcon: Icon(Icons.people_alt),
-                        label: 'Customers',
-                      ),
-                      NavigationDestination(
-                        icon: Icon(Icons.car_repair_outlined),
-                        selectedIcon: Icon(Icons.car_repair),
-                        label: 'Services',
                       ),
                       NavigationDestination(
                         icon: Icon(Icons.person_4_outlined),

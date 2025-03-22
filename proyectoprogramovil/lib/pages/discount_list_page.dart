@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:proyectoprogramovil/state/app_state.dart';
 
 class DiscountListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text('Lista de Descuentos'),
@@ -16,7 +19,14 @@ class DiscountListScreen extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('discounts').snapshots(),
+        stream:
+            FirebaseFirestore.instance
+                .collection('discounts')
+                .where(
+                  'workshopId',
+                  isEqualTo: appState.currentProfile!.workshopId!,
+                )
+                .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -44,14 +54,9 @@ class DiscountListScreen extends StatelessWidget {
                   ),
                   title: Text(
                     discount['codeName'] ?? 'Descuento sin título',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(
-                    'Descuento: ${discount['amount'] ?? '0'}%',
-                  ),
+                  subtitle: Text('Descuento: ${discount['amount'] ?? '0'}%'),
                 ),
               );
             },

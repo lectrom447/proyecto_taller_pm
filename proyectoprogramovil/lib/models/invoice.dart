@@ -1,12 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 class Invoice {
-  final String invoiceId;  // Identificador único de la factura
-  final String vehicleId;  // Identificador del vehículo // Lista de servicios realizados
-  final DateTime invoiceDate;  // Fecha de la factura
-  final double totalAmount;  // Total de los servicios
+  final String invoiceId; // Identificador único de la factura
+  final String
+  vehicleId; // Identificador del vehículo // Lista de servicios realizados
+  final DateTime invoiceDate; // Fecha de la factura
+  final double totalAmount; // Total de los servicios
   final bool isPaid;
+  String? workshopId;
 
   // Constructor
   Invoice({
@@ -15,8 +16,8 @@ class Invoice {
     required this.invoiceDate,
     required this.totalAmount,
     required this.isPaid,
+    this.workshopId,
   });
-
 
   // Método para convertir la factura a un mapa (útil para guardarla en Firestore o base de datos)
   Map<String, dynamic> toMap() {
@@ -25,7 +26,8 @@ class Invoice {
       'vehicleId': vehicleId,
       'invoiceDate': invoiceDate,
       'totalAmount': totalAmount,
-       'isPaid': isPaid,
+      'isPaid': isPaid,
+      'workshopId': workshopId,
     };
   }
 
@@ -37,7 +39,7 @@ class Invoice {
       invoiceDate: (map['invoiceDate'] as Timestamp).toDate(),
       totalAmount: map['totalAmount'],
       isPaid: map['isPaid'],
+      workshopId: map['workshopId'],
     );
   }
 }
-

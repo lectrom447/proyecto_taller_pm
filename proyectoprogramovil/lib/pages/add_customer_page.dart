@@ -24,7 +24,11 @@ class AddCustomerPage extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddVehiclePage(customerId: createdCustomer.id),
+        builder:
+            (context) => AddVehiclePage(
+              customerId: createdCustomer.id,
+              workshopId: createdCustomer.workshopId,
+            ),
       ),
     );
   }
