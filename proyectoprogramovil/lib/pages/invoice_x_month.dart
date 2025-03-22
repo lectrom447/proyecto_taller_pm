@@ -69,6 +69,7 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
         String customerName = customerDoc.docs[0]['fullName'];
 
         Map<String, dynamic> factura = {
+          'invoiceId': doc.id, // Guardamos el ID de la factura
           'totalAmount': totalAmount,
           'invoiceDate': (doc['invoiceDate'] as Timestamp).toDate(),
         };
@@ -88,6 +89,7 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
     }
   }
 
+  // Función para mostrar detalles y eliminar factura
   Future<void> mostrarDetallesFactura(
       String cliente, List<Map<String, dynamic>> facturas) async {
     showDialog(
@@ -109,6 +111,18 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
                   subtitle: Text(
                     'Fecha: ${factura['invoiceDate'].day}/${factura['invoiceDate'].month}/${factura['invoiceDate'].year}',
                   ),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () async {
+                      bool confirmar = await mostrarConfirmacion();
+                      if (confirmar) {
+                        await eliminarFactura(factura['invoiceId']);
+                        obtenerFacturas(); // Recargar las facturas
+                        Navigator.of(context).pop(); // Cerrar el diálogo actual
+                        mostrarDetallesFactura(cliente, facturas); // Recargar detalles
+                      }
+                    },
+                  ),
                 );
               },
             ),
@@ -124,6 +138,43 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
     );
   }
 
+  // Función para mostrar confirmación de eliminación
+  Future<bool> mostrarConfirmacion() async {
+    return await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Confirmar eliminación'),
+          content: Text('¿Estás seguro de eliminar esta factura?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Función para eliminar factura de Firestore
+  Future<void> eliminarFactura(String invoiceId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('invoices')
+          .doc(invoiceId)
+          .delete();
+      print('Factura eliminada correctamente.');
+    } catch (e) {
+      print('Error al eliminar la factura: $e');
+    }
+  }
+
+  // Seleccionar mes
   Future<void> selectMonth() async {
     DateTime? pickedMonth = await showMonthPicker(
       context: context,
@@ -200,8 +251,7 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
                             ),
                             onLongPress: () => mostrarDetallesFactura(
                               cliente,
-                              facturasPorCliente[cliente]!,
-                            ),
+                              facturasPorCliente[cliente]!),
                           ),
                         );
                       },
