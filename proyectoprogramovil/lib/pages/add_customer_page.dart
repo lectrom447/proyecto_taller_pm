@@ -21,7 +21,7 @@ class AddCustomerPage extends StatelessWidget {
     customer.workshopId = appState.currentProfile!.workshopId;
     final createdCustomer = await _customerRepository.create(customer);
     if (!context.mounted) return;
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder:
@@ -31,6 +31,10 @@ class AddCustomerPage extends StatelessWidget {
             ),
       ),
     );
+
+    if (!context.mounted) return;
+
+    Navigator.pop(context, true);
   }
 
   @override

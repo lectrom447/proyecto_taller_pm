@@ -1,11 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/components/join_workshop_form.dart';
 import 'package:proyectoprogramovil/models/models.dart';
 import 'package:proyectoprogramovil/repositories/access_code_repository.dart';
 import 'package:proyectoprogramovil/repositories/profile_repository.dart';
-import 'package:proyectoprogramovil/state/app_state.dart';
 
 class JoinWorkshopPage extends StatelessWidget {
   JoinWorkshopPage({super.key});

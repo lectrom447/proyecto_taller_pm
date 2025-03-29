@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,6 +17,8 @@ class MyApp extends StatelessWidget {
 }
 
 class MainOptionPage extends StatelessWidget {
+  const MainOptionPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MainScreen();
@@ -22,6 +26,8 @@ class MainOptionPage extends StatelessWidget {
 }
 
 class MainScreen extends StatelessWidget {
+  const MainScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,8 +44,13 @@ class MainScreen extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: Center( // Centrar la opción en la pantalla
-                child: _buildOptionCard(context, 'Reporte de Facturación', Icons.account_balance_wallet),
+              child: Center(
+                // Centrar la opción en la pantalla
+                child: _buildOptionCard(
+                  context,
+                  'Reporte de Facturación',
+                  Icons.account_balance_wallet,
+                ),
               ),
             ),
             SizedBox(height: 20), // Espacio entre la opción y el botón flotante
@@ -48,11 +59,15 @@ class MainScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showFormDialog(context, 'Nueva Cita', ['Nombre del Cliente', 'Datos del Vehículo', 'Motivo de Ingreso']);
+          _showFormDialog(context, 'Nueva Cita', [
+            'Nombre del Cliente',
+            'Datos del Vehículo',
+            'Motivo de Ingreso',
+          ]);
         },
-        child: Icon(Icons.add, size: 28),
         backgroundColor: Colors.lightBlue,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Icon(Icons.add, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -67,9 +82,13 @@ class MainScreen extends StatelessWidget {
           _showFormDialog(context, title, ['Ingrese la información aquí']);
         },
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20), // Ajuste de espacio interno
+          padding: EdgeInsets.symmetric(
+            vertical: 20,
+            horizontal: 20,
+          ), // Ajuste de espacio interno
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Evitar que ocupe más espacio del necesario
+            mainAxisSize:
+                MainAxisSize.min, // Evitar que ocupe más espacio del necesario
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 50, color: Colors.blueGrey), // Tamaño ajustado
@@ -77,7 +96,11 @@ class MainScreen extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
             ],
           ),
@@ -86,14 +109,21 @@ class MainScreen extends StatelessWidget {
     );
   }
 
-  void _showFormDialog(BuildContext context, String title, List<String> fields) {
-    List<TextEditingController> controllers = fields.map((_) => TextEditingController()).toList();
-    
+  void _showFormDialog(
+    BuildContext context,
+    String title,
+    List<String> fields,
+  ) {
+    List<TextEditingController> controllers =
+        fields.map((_) => TextEditingController()).toList();
+
     showDialog(
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -107,7 +137,11 @@ class MainScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16),
-                  ...List.generate(fields.length, (index) => _buildTextField(controllers[index], fields[index])),
+                  ...List.generate(
+                    fields.length,
+                    (index) =>
+                        _buildTextField(controllers[index], fields[index]),
+                  ),
                   SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -116,8 +150,11 @@ class MainScreen extends StatelessWidget {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        child: Text('Cancelar', style: TextStyle(color: Colors.red)),
-                      ),  
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
                       ElevatedButton(
                         onPressed: () {
                           for (int i = 0; i < fields.length; i++) {
@@ -125,7 +162,9 @@ class MainScreen extends StatelessWidget {
                           }
                           Navigator.pop(context);
                         },
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.lightBlue),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.lightBlue,
+                        ),
                         child: Text('Guardar'),
                       ),
                     ],

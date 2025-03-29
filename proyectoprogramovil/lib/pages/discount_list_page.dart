@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
 
 class DiscountListScreen extends StatelessWidget {
+  const DiscountListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context, listen: false);

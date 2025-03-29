@@ -7,7 +7,7 @@ import 'package:proyectoprogramovil/state/app_state.dart'; // Importa Firebase F
 class AddProductPage extends StatefulWidget {
   final Function(Product)? onProductAdded;
 
-  AddProductPage({this.onProductAdded});
+  const AddProductPage({super.key, this.onProductAdded});
 
   @override
   _AddProductPageState createState() => _AddProductPageState();

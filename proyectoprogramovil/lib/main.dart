@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:proyectoprogramovil/firebase_options.dart';
 import 'package:proyectoprogramovil/pages/access_codes_page.dart';
 import 'package:proyectoprogramovil/pages/add_access_code_page.dart';
-import 'package:proyectoprogramovil/pages/add_customer_page.dart';
 import 'package:proyectoprogramovil/pages/discount_list_page.dart';
 import 'package:proyectoprogramovil/pages/join_workshop_page.dart';
 import 'package:proyectoprogramovil/pages/pages.dart';

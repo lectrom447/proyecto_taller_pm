@@ -8,7 +8,11 @@ class AddVehiclePage extends StatefulWidget {
   final String? customerId; // Pass the customerId when navigating to this page
   final String? workshopId; // Pass the customerId when navigating to this page
 
-  AddVehiclePage({required this.customerId, required this.workshopId});
+  const AddVehiclePage({
+    super.key,
+    required this.customerId,
+    required this.workshopId,
+  });
 
   @override
   _AddVehiclePageState createState() => _AddVehiclePageState();
@@ -57,21 +61,19 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
           // Now update the customer with the new vehicleId
           await customerRef.update(customerData);
 
+          if (!mounted) return;
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Customer updated with vehicle!')),
           );
         }
 
+        if (!mounted) return;
         // Show success and pop the current screen
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Vehicle added successfully!')));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CustomersPage(),
-          ), // Make sure to import CustomersPage
-        );
+        Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(
           context,

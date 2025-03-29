@@ -5,6 +5,8 @@ import 'package:proyectoprogramovil/models/models.dart';
 import 'package:proyectoprogramovil/state/app_state.dart';
 
 class VehicleServiceStatusScreen extends StatelessWidget {
+  const VehicleServiceStatusScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -105,7 +107,8 @@ class ServiceDetailScreen extends StatefulWidget {
   final Map<String, dynamic> vehicle;
   final String customerName;
 
-  ServiceDetailScreen({
+  const ServiceDetailScreen({
+    super.key,
     required this.vehicleId,
     required this.vehicle,
     required this.customerName,
